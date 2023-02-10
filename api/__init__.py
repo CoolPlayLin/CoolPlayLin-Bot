@@ -1,0 +1,1 @@
+import cqbotapi as NormalAPI
