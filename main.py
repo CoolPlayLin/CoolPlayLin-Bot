@@ -8,7 +8,7 @@ from requests import get
 
 if not (pathlib.Path(__file__).parent / "Admin.json").exists():
     with open((pathlib.Path(__file__).parent / "Admin.json"), "w+", encoding="utf-8") as f:
-        f.write(json.dumps({"Root": None, "Admin": []}))
+        f.write(json.dumps({"Root": None,"Admin": [],"NotAllowUser":[]}))
 
 Always_Task = []
 Task = ToolAPI.TaskManager()
@@ -18,7 +18,44 @@ Dates = ToolAPI.JsonAuto(None, "READ")
 Server = NormalAPI.APIs("127.0.0.1:5700")
 
 def Group_Msg(Group_id, User_id, Message:str):
-        if Message == "[CQ:at,qq=391760560] Admin":
+        if User_id in Dates['NotAllowUser']:
+            Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '管理员不允许你使用')))
+            return
+        if "[CQ:at,qq=391760560] Refuse " in Message:
+            if not User_id in Dates['Admin']:
+                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有管理权限，无法查看管理列表")))
+            else:
+                try:
+                    User = int(Message.replace("[CQ:at,qq=391760560] Refuse ", ""))
+                    if User != Dates['Root']:
+                        Dates['NotAllowUser'].append(User)
+                        Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '已将此用户添加到拒绝列表\n{}'.format(Dates['NotAllowUser']))))
+                    else:
+                        Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '不允许将Root用户添加到拒绝列表')))
+                except BaseException as e:
+                    Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "错误：\n{}".format(e))))
+        elif "[CQ:at,qq=391760560] Accept " in Message:
+            if not User_id in Dates['Admin']:
+                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有管理权限，无法查看管理列表")))
+            else:
+                try:
+                    User = int(Message.replace("[CQ:at,qq=391760560] Accept ", ""))
+                    if User in Dates['NotAllowUser']:
+                        Dates['NotAllowUser'].remove(User)
+                        Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '已将此用户从拒绝列表移除\n{}'.format(Dates['NotAllowUser']))))
+                    else:
+                        Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '此用户不在拒绝列表中')))
+                except BaseException as e:
+                    Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "错误：\n{}".format(e))))
+        elif "[CQ:at,qq=391760560] RefuseList" in Message:
+            Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '拒绝用户列表\n{}'.format(Dates['NotAllowUser']))))
+        elif "[CQ:at,qq=391760560] Set Root" in Message:
+            if Dates['Root'] == None:
+                Dates['Root'] = User_id
+                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, 'Root成功设置为{}'.format(str(User_id)))))
+            else:
+                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, 'Root用户已设置，请勿重复设置')))
+        elif Message == "[CQ:at,qq=391760560] Admin":
             if User_id != Dates['Root']:
                 Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有Root权限，无法查看管理列表")))
             else:
