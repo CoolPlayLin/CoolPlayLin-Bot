@@ -3,7 +3,7 @@ from flask import Flask
 from threading import Thread
 from flask import request
 import time
-import psutil, os, random, pathlib, json
+import random, pathlib, json
 from requests import get
 
 if not (pathlib.Path(__file__).parent / "Admin.json").exists():
@@ -46,7 +46,6 @@ def Group_Msg(Group_id, User_id, Message:str):
                 except BaseException as e:
                     Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "错误：\n{}".format(e))))
         elif '[CQ:at,qq=391760560] Status' in Message:
-            Info = psutil.virtual_memory()
             Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, f"状态信息\n正在排队的任务数 {len(Task.Perform_QueuingTask)}\n正在运行的任务数 {len(Task.Perform_RunningTask)}")))
         elif Message in ['[CQ:at,qq=391760560] 获取一言', '[CQ:at,qq=391760560] 一言', '[CQ:at,qq=391760560] 文案']:
             Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, (get("https://v1.hitokoto.cn/").json()['hitokoto']))))
