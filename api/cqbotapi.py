@@ -1,6 +1,6 @@
 import requests
 
-__all__ = ['APIs']
+__all__ = ('APIs')
 
 class APIs:
     __slots__ = ('Server', 'Verify', 'AccessKey')
