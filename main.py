@@ -21,7 +21,9 @@ def Group_Msg(Group_id, User_id, Message:str):
         if User_id in Dates['NotAllowUser']:
             Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '管理员不允许你使用')))
             return
-        if "[CQ:at,qq=391760560] Refuse " in Message:
+        if Message in ["[CQ:at,qq=391760560] "+each for each in ["menu", "Menu", "MENU", "菜单","功能", "功能列表"]]:
+            Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "Hello，我是由CoolPlayLin开发并维护的开源QQ机器人，采用GPLv3许可证，项目直达 -> https://github.com/CoolPlayLin/CoolPlayLin-Bot\n我目前的功能\n1. 一言：获取一言文案")))
+        elif "[CQ:at,qq=391760560] Refuse " in Message:
             if not User_id in Dates['Admin']:
                 Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有管理权限，无法查看管理列表")))
             else:

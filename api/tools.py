@@ -6,6 +6,7 @@ import pathlib
 __all__ = ("TaskManager", "Logger")
 
 class TaskManager:
+    __slots__ = ("Perform_QueuingTask", "Perform_RunningTask")
     def __init__(self) -> None:
         self.Perform_QueuingTask = []
         self.Perform_RunningTask = []
