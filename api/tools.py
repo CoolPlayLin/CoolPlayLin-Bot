@@ -52,3 +52,9 @@ def JsonAuto(Json:dict, Action:str) -> bool|dict:
             return False
     else:
         return False
+
+def BadWord(Message:str, BadWordList:list) -> bool:
+    if len([each for each in BadWordList if each in Message]) > 0:
+        return True
+    else:
+        return False

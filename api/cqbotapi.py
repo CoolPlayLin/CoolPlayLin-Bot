@@ -213,3 +213,9 @@ class APIs:
         }
         Response = requests.post("{}/delete_friend".format(self.Server), data=Date)
         return Response
+    def Delete_Msg(self, message_id:int) -> requests.Response:
+        Date = {
+            "message_id": message_id
+        }
+        Response = requests.post("{}/delete_msg".format(self.Server), data=Date)
+        return Response

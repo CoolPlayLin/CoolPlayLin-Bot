@@ -8,24 +8,28 @@ from requests import get
 
 if not (pathlib.Path(__file__).parent / "Admin.json").exists():
     with open((pathlib.Path(__file__).parent / "Admin.json"), "w+", encoding="utf-8") as f:
-        f.write(json.dumps({"Root": None,"Admin": [],"NotAllowUser":[]}))
+        f.write(json.dumps({"Root": None,"Admin": [],"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700"}))
 
 Always_Task = []
 Task = ToolAPI.TaskManager()
 app = Flask(__name__)
 Dates = ToolAPI.JsonAuto(None, "READ")
 
-Server = NormalAPI.APIs("127.0.0.1:5700")
+Server = NormalAPI.APIs(Dates['PostIP'])
 
-def Group_Msg(Group_id, User_id, Message:str):
+def Group_Msg(Group_id:int, User_id:int, Message:str, Message_Id:int) -> None:
         if User_id in Dates['NotAllowUser']:
             Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '管理员不允许你使用')))
             return
+        elif ToolAPI.BadWord(request.json['raw_message'], Dates['BadWords']):
+                Task.AddTask(Thread(target=Server.Delete_Msg, kwargs=dict(message_id=Message_Id)))
+                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "检测到敏感内容, 已尝试撤回")))
+                return
         if Message in ["[CQ:at,qq=391760560] "+each for each in ["menu", "Menu", "MENU", "菜单","功能", "功能列表"]]:
             Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "Hello，我是由CoolPlayLin开发并维护的开源QQ机器人，采用GPLv3许可证，项目直达 -> https://github.com/CoolPlayLin/CoolPlayLin-Bot\n我目前的功能\n1. 一言：获取一言文案")))
         elif "[CQ:at,qq=391760560] Refuse " in Message:
             if not User_id in Dates['Admin']:
-                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有管理权限，无法查看管理列表")))
+                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有Admin权限，无法查看管理列表")))
             else:
                 try:
                     User = int(Message.replace("[CQ:at,qq=391760560] Refuse ", ""))
@@ -90,7 +94,7 @@ def Group_Msg(Group_id, User_id, Message:str):
             Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, (get("https://v1.hitokoto.cn/").json()['hitokoto']))))
         elif '[CQ:at,qq=391760560] 冷静' in Message:
             if not User_id in Dates['Admin']:
-                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有Root权限，无法查看管理列表")))
+                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有Admin权限，无法查看管理列表")))
             else:
                 try:
                     User = int(Message.replace("[CQ:at,qq=391760560] 冷静", ""))
@@ -100,7 +104,7 @@ def Group_Msg(Group_id, User_id, Message:str):
                     Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "错误：\n{}".format(e))))
         elif '[CQ:at,qq=391760560] 禁言大转盘' in Message:
             if not User_id in Dates['Admin']:
-                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有Root权限，无法查看管理列表")))
+                Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有Admin权限，无法查看管理列表")))
             else:
                 try:
                     User = int(Message.replace("[CQ:at,qq=391760560] 禁言大转盘", ""))
@@ -118,17 +122,17 @@ def Main():
     #     if request.get_json("message_type") == "group":
     if request.json["post_type"] == "message":
         if request.json['message_type'] == 'group':
-            Group_Msg(request.json['group_id'], request.json['user_id'], request.json['raw_message'])
+            Group_Msg(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'])
     return 'ok'
 def DateAutoSave():
     global Dates
 
     while True:
-        time.sleep(1)
-        ToolAPI.JsonAuto(Dates, "WRITE")
+        if Dates != ToolAPI.JsonAuto(None, "READ"):
+            Task.AddTask(Thread(target=ToolAPI.JsonAuto, args=(Dates, "WRITE")))
 
 
-Always_Task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=5120)))
+Always_Task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort'])))
 Always_Task.append(Thread(target=Task))
 Always_Task.append(Thread(target=DateAutoSave))
 
