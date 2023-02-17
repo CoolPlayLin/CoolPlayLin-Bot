@@ -1,5 +1,5 @@
 from api import *
-from flask import Flask
+from flask import Flask, render_template
 from threading import Thread
 from flask import request
 from time import sleep
@@ -11,6 +11,20 @@ Always_Task = []
 Task = ToolAPI.TaskManager()
 app = Flask(__name__)
 Dates = ToolAPI.JsonAuto(None, "READ", PATH)
+def AutoSave():
+    global Dates
+
+    while True:
+        if Dates != ToolAPI.JsonAuto(None, "READ", PATH):
+            Task.AddTask(Thread(target=ToolAPI.JsonAuto, args=(Dates, "WRITE", PATH)))
+        if Dates["BotQQ"] is None:
+            try:
+                QQ = Server.Get_Login_Info().json()['data']['user_id']
+                Dates["BotQQ"] = QQ
+                Dates["@Me"] = "[CQ:at,qq={}] ".format(QQ)
+            except:
+                pass
+
 
 Server = NormalAPI.APIs(Dates['PostIP'])
 
@@ -113,6 +127,7 @@ def Group_Msg(Group_id:int, User_id:int, Message:str, Message_Id:int) -> None:
         elif Dates["@Me"].replace(" ", "") in Message:
             Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "干啥子")))
 
+# POST数据路由
 @app.route("/commit", methods=['POST'])
 def Main():
     # if request.get_json("post_type") == "message":
@@ -121,29 +136,18 @@ def Main():
         if request.json['message_type'] == 'group':
             Group_Msg(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'])
     return 'ok'
-def AutoSave():
-    global Dates
 
-    while True:
-        if Dates != ToolAPI.JsonAuto(None, "READ", PATH):
-            Task.AddTask(Thread(target=ToolAPI.JsonAuto, args=(Dates, "WRITE", PATH)))
-        if Dates["BotQQ"] is None:
-            try:
-                QQ = Server.Get_Login_Info().json()['data']['user_id']
-                Dates["BotQQ"] = QQ
-                Dates["@Me"] = "[CQ:at,qq={}] ".format(QQ)
-            except:
-                pass
-        sleep(1)
-
-@app.route("/", methods=['GET'])
-def Web():
-    return "ok"
+# Web页面路由
+# @app.route("/", methods=['GET'])
+# def Web():
+#     return render_template("index.html")
+# @app.route("/assets/<PATH>")
+# def Assets(PATH):
+#     return render_template("assets/"+PATH)
 
 Always_Task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort'])))
 Always_Task.append(Thread(target=Task))
 Always_Task.append(Thread(target=AutoSave))
-Always_Task.append(Thread(target=Web))
 
 if __name__ == '__main__':
     for each in Always_Task:
