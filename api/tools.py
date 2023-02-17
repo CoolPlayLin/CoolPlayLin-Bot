@@ -5,7 +5,7 @@ from pathlib import Path
 
 __all__ = ("TaskManager", "Logger")
 
-DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None}
+DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": []}
 class TaskManager:
     __slots__ = ("Perform_QueuingTask", "Perform_RunningTask")
     def __init__(self) -> None:
