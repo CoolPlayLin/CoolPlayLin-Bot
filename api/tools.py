@@ -1,10 +1,11 @@
 from threading import Thread
 import time
 import json
-import pathlib
+from pathlib import Path
 
 __all__ = ("TaskManager", "Logger")
 
+DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None}
 class TaskManager:
     __slots__ = ("Perform_QueuingTask", "Perform_RunningTask")
     def __init__(self) -> None:
@@ -35,8 +36,10 @@ def Logger(Message:str):
     with open("Run.log", "a", encoding='utf-8') as f:
         f.write("{} Message".format(time.strftime("%H:%M:%S")))
 
-def JsonAuto(Json:dict, Action:str) -> bool|dict:
-    PATH = pathlib.Path(__file__).parent.parent / "Admin.json"
+def JsonAuto(Json:dict, Action:str, PATH:Path) -> bool|dict:
+    if not PATH.exists():
+        with open(PATH, "w+", encoding="utf-8") as f:
+            f.write(json.dumps(DefaultJSON))
     if Action == "WRITE":
         try:
             with open(PATH, "w+", encoding="utf-8") as file:
