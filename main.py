@@ -40,6 +40,7 @@ def Group_Msg(Group_id:int, User_id:int, Message:str, Message_Id:int) -> None:
             if Dates["@Me"]+'冷静' in Message:
                 if not User_id in Dates['Admin']:
                     Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有Admin权限")))
+                    return True
                 else:
                     try:
                         User = int(Message.replace(Dates["@Me"]+"冷静", ""))
@@ -47,9 +48,11 @@ def Group_Msg(Group_id:int, User_id:int, Message:str, Message_Id:int) -> None:
                         Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "已尝试冷静此人")))
                     except BaseException as e:
                         Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "错误：\n{}".format(e))))
+                    return True
             elif Dates["@Me"]+'禁言大转盘' in Message:
                 if not User_id in Dates['Admin']:
                     Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "你没有Admin权限")))
+                    return True
                 else:
                     try:
                         User = int(Message.replace(Dates["@Me"]+"禁言大转盘", ""))
@@ -58,13 +61,15 @@ def Group_Msg(Group_id:int, User_id:int, Message:str, Message_Id:int) -> None:
                         Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "恭喜获得{}分钟".format(Min))))
                     except BaseException as e:
                         Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "错误：\n{}".format(e))))
+                    return True
             elif Dates["@Me"]+'关灯' in Message:
                 Task.AddTask(Thread(target=Server.Set_Group_Whole_Ban, args=(Group_id, True)))
                 Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '全体禁言已启动')))
+                return True
             elif Dates["@Me"]+'开灯' in Message:
                 Task.AddTask(Thread(target=Server.Set_Group_Whole_Ban, args=(Group_id, False)))
                 Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '全体禁言已停止')))
-            return True
+                return True
 
         if Message in [Dates["@Me"]+each for each in ["menu", "Menu", "MENU", "菜单","功能", "功能列表"]]:
             Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, "Hello，我是由CoolPlayLin开发并维护的开源QQ机器人，采用GPLv3许可证，项目直达 -> https://github.com/CoolPlayLin/CoolPlayLin-Bot\n我目前的功能\n1. 一言：获取一言文案")))
@@ -182,12 +187,9 @@ def Main():
     return 'ok'
 
 # Web页面路由
-# @app.route("/", methods=['GET'])
-# def Web():
-#     return render_template("index.html")
-# @app.route("/assets/<PATH>")
-# def Assets(PATH):
-#     return render_template("assets/"+PATH)
+@app.route("/", methods=['GET'])
+def Web():
+    return render_template("index.html")
 
 Always_Task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort'])))
 Always_Task.append(Thread(target=Task))
