@@ -14,18 +14,17 @@ class TaskManager:
     
     def __call__(self):
         while True:
-            if len(self.Perform_QueuingTask)+len(self.Perform_RunningTask) > 0:
-                for each in self.Perform_QueuingTask:
-                    if not isinstance(each, Thread):
-                        self.Perform_QueuingTask.remove(each)
-                for each in self.Perform_QueuingTask:
-                    self.Perform_RunningTask.append(each)
+            for each in self.Perform_QueuingTask:
+                if not isinstance(each, Thread):
                     self.Perform_QueuingTask.remove(each)
-                for each in self.Perform_RunningTask:
-                    each.start()
-                for each in self.Perform_RunningTask:
-                    each.join()
-                self.Perform_RunningTask.clear()
+            for each in self.Perform_QueuingTask:
+                self.Perform_RunningTask.append(each)
+                self.Perform_QueuingTask.remove(each)
+            for each in self.Perform_RunningTask:
+                each.start()
+            for each in self.Perform_RunningTask:
+                each.join()
+            self.Perform_RunningTask.clear()
     def AddTask(self, Task:Thread) -> bool:
         if isinstance(Task, Thread):
             self.Perform_QueuingTask.append(Task)

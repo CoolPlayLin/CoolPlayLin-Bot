@@ -33,7 +33,7 @@ def CodeReview(Code: str, Group_id: int) -> bool:
         # 3. 避免使用不必要的下划线前缀
         # 4. 将多行字符串拆分为单独的行，以提高可读性
         # 5. 不要在一行上使用多个语句，以提高可读性
-        with open("temp.py", "w+", encoding="utf-8") as f:
+        with open(pathlib.Path(__file__).parent/"temp.py", "w+", encoding="utf-8") as f:
             f.write(Code)
         from temp import Tech
         random_numbers = ""
