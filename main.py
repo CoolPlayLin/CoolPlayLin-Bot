@@ -191,9 +191,9 @@ def Main():
 def Web():
     return render_template("index.html")
 
-Always_Task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort'])))
-Always_Task.append(Thread(target=Task))
-Always_Task.append(Thread(target=AutoSave))
+Always_Task.append(Thread(target=Task, name="TaskManager"))
+Always_Task.append(Thread(target=AutoSave, name="DateAutoSave"))
+Always_Task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort']), name="FlaskServer"))
 
 if __name__ == '__main__':
     for each in Always_Task:

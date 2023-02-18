@@ -5,3 +5,4 @@ Go-cqhttp基于Flask的Python功能实现
 
 - [go-cqhttp](https://github.com/Mrs4s/go-cqhttp)
 - [flask](https://github.com/pallets/flask)
+- [mdui](https://github.com/zdhxiong/mdui)
