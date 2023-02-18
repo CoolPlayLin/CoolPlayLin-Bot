@@ -25,7 +25,7 @@ class TaskManager:
                     each.start()
                 for each in self.Perform_RunningTask:
                     each.join()
-                    self.Perform_RunningTask.remove(each)
+                self.Perform_RunningTask.clear()
     def AddTask(self, Task:Thread) -> bool:
         if isinstance(Task, Thread):
             self.Perform_QueuingTask.append(Task)

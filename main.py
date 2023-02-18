@@ -3,7 +3,7 @@ from flask import Flask, render_template
 from threading import Thread
 from flask import request
 from time import sleep
-import random, pathlib
+import random, pathlib, os
 PATH = pathlib.Path(__file__).parent / "Config.json"
 from requests import get
 
@@ -25,6 +25,30 @@ def AutoSave():
                 Dates["@Me"] = "[CQ:at,qq={}] ".format(QQ)
             except:
                 pass
+
+def CodeReview(Code: str, Group_id: int) -> bool:
+    try:
+        # 1. 不建议执行任意代码，更好的方法是使用限制代码访问权限的沙盒环境
+        # 2. 建议使用更具描述性的变量名，以便更容易理解代码
+        # 3. 避免使用不必要的下划线前缀
+        # 4. 将多行字符串拆分为单独的行，以提高可读性
+        # 5. 不要在一行上使用多个语句，以提高可读性
+        with open("temp.py", "w+", encoding="utf-8") as f:
+            f.write(Code)
+        from temp import Tech
+        random_numbers = ""
+        for i in range(1, random.randint(5, 10)):
+            random_numbers += f"{str(random.randint(1, 100))} "
+        random_numbers += str(random.randint(1, 100))
+        # 6. 明确传递参数名可以提高代码可读性
+        tech1 = Tech(Mode=1, Number=random_numbers)
+        Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, f'模式1输出\n{str(tech1)}, 原值{random_numbers}')))
+        random_number = random.randint(1, 100)
+        tech2 = Tech(Mode=2, Number=random_number)
+        Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, f'模式2输出\n{str(tech2)} 原数{random_number}')))
+    except BaseException as e:
+        Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, f'审核不通过，错误：{e}')))
+
 
 def Group_Msg(Group_id:int, User_id:int, Message:str, Message_Id:int) -> None:
     if User_id in Dates['NotAllowUser']:
@@ -67,6 +91,9 @@ def Group_Msg(Group_id:int, User_id:int, Message:str, Message_Id:int) -> None:
         elif Dates["@Me"]+'开灯' in Message:
             Task.AddTask(Thread(target=Server.Set_Group_Whole_Ban, args=(Group_id, False)))
             Task.AddTask(Thread(target=Server.Send_Group_Msg, args=(Group_id, '全体禁言已停止')))
+            return True
+        elif Dates["@Me"]+"代码审查" in Message:
+            Task.AddTask(Thread(target=CodeReview, args=(Message.replace(Dates["@Me"]+"代码审查", ""), Group_id)))
             return True
 
     if Message in [Dates["@Me"]+each for each in ["menu", "Menu", "MENU", "菜单","功能", "功能列表"]]:
