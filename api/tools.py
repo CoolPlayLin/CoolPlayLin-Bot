@@ -9,22 +9,23 @@ DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadW
 class TaskManager:
     __slots__ = ("Perform_QueuingTask", "Perform_RunningTask")
     def __init__(self) -> None:
-        self.Perform_QueuingTask = []
-        self.Perform_RunningTask = []
+        self.Perform_QueuingTask:list[Thread] = []
+        self.Perform_RunningTask:list[Thread] = []
     
     def __call__(self):
         while True:
-            for each in self.Perform_QueuingTask:
-                if not isinstance(each, Thread):
+            if len(self.Perform_QueuingTask)+len(self.Perform_RunningTask) > 0:
+                for each in self.Perform_QueuingTask:
+                    if not isinstance(each, Thread):
+                        self.Perform_QueuingTask.remove(each)
+                for each in self.Perform_QueuingTask:
+                    self.Perform_RunningTask.append(each)
                     self.Perform_QueuingTask.remove(each)
-            for each in self.Perform_QueuingTask:
-                self.Perform_RunningTask.append(each)
-                self.Perform_QueuingTask.remove(each)
-            for each in self.Perform_RunningTask:
-                each.start()
-            for each in self.Perform_RunningTask:
-                each.join()
-            self.Perform_RunningTask.clear()
+                for each in self.Perform_RunningTask:
+                    each.start()
+                for each in self.Perform_RunningTask:
+                    each.join()
+                    self.Perform_RunningTask.remove(each)
     def AddTask(self, Task:Thread) -> bool:
         if isinstance(Task, Thread):
             self.Perform_QueuingTask.append(Task)
