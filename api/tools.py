@@ -1,10 +1,11 @@
-from threading import Thread
+from threading import Thread, Lock
 import json, os
 from pathlib import Path
 
 __all__ = ("TaskManager", "Logger")
 
 DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": []}
+
 class TaskManager:
     __slots__ = ("Perform_QueuingTask", "Perform_RunningTask")
     def __init__(self) -> None:
@@ -32,21 +33,26 @@ class TaskManager:
         else:
             return False
 
+FileLock = Lock()
+
 def JsonAuto(Json:dict, Action:str, PATH:Path) -> bool|dict:
     if not PATH.exists():
-        with open(PATH, "w+", encoding="utf-8") as f:
-            f.write(json.dumps(DefaultJSON))
+        with FileLock:
+            with open(PATH, "w+", encoding="utf-8") as f:
+                f.write(json.dumps(DefaultJSON))
     if Action == "WRITE":
         try:
-            with open(PATH, "w+", encoding="utf-8") as file:
-                file.write(json.dumps(Json))
-            return True
+            with FileLock:
+                with open(PATH, "w+", encoding="utf-8") as file:
+                    file.write(json.dumps(Json))
+                return True
         except:
             return False
     elif Action == "READ":
         try:
-            with open(PATH, "rt", encoding="utf-8") as file:
-                Res:dict = json.loads(file.read())
+            with FileLock:
+                with open(PATH, "rt", encoding="utf-8") as file:
+                    Res:dict = json.loads(file.read())
             if Res.keys() == DefaultJSON.keys():
                 return Res
             else:
