@@ -7,7 +7,7 @@ import random, pathlib
 PATH = pathlib.Path(__file__).parent / "Config.json"
 from requests import get
 
-Always_Task = []
+Always_Task:list[Thread] = []
 Task = ToolAPI.TaskManager()
 app = Flask(__name__)
 Dates = ToolAPI.JsonAuto(None, "READ", PATH)
@@ -194,7 +194,16 @@ Always_Task.append(Thread(target=AutoSave, name="DateAutoSave"))
 Always_Task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort']), name="FlaskServer"))
 
 if __name__ == '__main__':
+    # 启动所有任务
     for each in Always_Task:
         each.start()
-    for each in Always_Task:
-        each.join()
+
+    # Bot看门狗
+    while True:
+        TaskList:tuple[Thread] = (Thread(target=Task, name="TaskManager"), Thread(target=AutoSave, name="DateAutoSave"), Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort']), name="FlaskServer"))
+        for each in Always_Task:
+            if not each.is_alive():
+                Index = Always_Task.index(each)
+                Always_Task[Index] =  TaskList[Index]
+                Always_Task[Index].start()
+        sleep(5)

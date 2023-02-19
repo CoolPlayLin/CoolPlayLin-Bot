@@ -1,6 +1,5 @@
 from threading import Thread
-import time
-import json
+import json, os
 from pathlib import Path
 
 __all__ = ("TaskManager", "Logger")
@@ -33,10 +32,6 @@ class TaskManager:
         else:
             return False
 
-def Logger(Message:str):
-    with open("Run.log", "a", encoding='utf-8') as f:
-        f.write("{} Message".format(time.strftime("%H:%M:%S")))
-
 def JsonAuto(Json:dict, Action:str, PATH:Path) -> bool|dict:
     if not PATH.exists():
         with open(PATH, "w+", encoding="utf-8") as f:
@@ -51,9 +46,14 @@ def JsonAuto(Json:dict, Action:str, PATH:Path) -> bool|dict:
     elif Action == "READ":
         try:
             with open(PATH, "rt", encoding="utf-8") as file:
-                return(json.loads(file.read()))
+                Res:dict = json.loads(file.read())
+            if Res.keys() == DefaultJSON.keys():
+                return Res
+            else:
+                raise Exception
         except:
-            return False
+            os.remove(PATH)
+            return DefaultJSON
     else:
         return False
 
