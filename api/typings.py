@@ -1,0 +1,2 @@
+class TaskManagerExit(BaseException):
+    pass

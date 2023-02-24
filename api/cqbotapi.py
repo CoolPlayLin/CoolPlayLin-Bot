@@ -1,3 +1,7 @@
+"""
+Go-cqhttp的API库
+"""
+
 import requests
 
 __all__ = ('APIs')

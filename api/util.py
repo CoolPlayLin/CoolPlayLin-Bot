@@ -1,31 +1,40 @@
+from pathlib import Path
+
 from threading import Thread, Lock
 import json, os
-from pathlib import Path
+from .typings import TaskManagerExit
 
 __all__ = ("TaskManager", "Logger")
 
 DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": []}
 
 class TaskManager:
-    __slots__ = ("Perform_QueuingTask", "Perform_RunningTask")
-    def __init__(self) -> None:
+    __slots__ = ("Perform_QueuingTask", "Perform_RunningTask", "Status", "TaskLimit")
+    def __init__(self, TaskLimit:int) -> None:
         self.Perform_QueuingTask:list[Thread] = []
         self.Perform_RunningTask:list[Thread] = []
+        self.TaskLimit = TaskLimit
+        self.Status = True
     
-    def __call__(self):
-        while True:
-            if len(self.Perform_QueuingTask)+len(self.Perform_RunningTask) > 0:
-                for each in self.Perform_QueuingTask:
-                    if not isinstance(each, Thread):
+    def run(self):
+        while self.Status:
+            try:
+                if len(self.Perform_QueuingTask)+len(self.Perform_RunningTask) > 0:
+                    for each in self.Perform_QueuingTask:
+                        self.Perform_RunningTask = [t for t in self.Perform_RunningTask if t.is_alive()]
+                        if not isinstance(each, Thread):
+                            self.Perform_QueuingTask.remove(each)
+                            continue
+                        elif self.TaskLimit:
+                            if len(self.Perform_RunningTask) >= self.TaskLimit:
+                                continue
+                        self.Perform_RunningTask.append(each)
                         self.Perform_QueuingTask.remove(each)
-                for each in self.Perform_QueuingTask:
-                    self.Perform_RunningTask.append(each)
-                    self.Perform_QueuingTask.remove(each)
-                for each in self.Perform_RunningTask:
-                    each.start()
-                for each in self.Perform_RunningTask:
-                    each.join()
-                    self.Perform_RunningTask.remove(each)
+                        self.Perform_RunningTask[-1].start()
+            except BaseException as e:
+                break
+        if self.Status:
+            raise TaskManagerExit
     def AddTask(self, Task:Thread) -> bool:
         if isinstance(Task, Thread):
             self.Perform_QueuingTask.append(Task)

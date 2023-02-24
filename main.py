@@ -8,7 +8,7 @@ PATH = pathlib.Path(__file__).parent / "Config.json"
 from requests import get
 
 Always_Task:list[Thread] = []
-Task = ToolAPI.TaskManager()
+Task = ToolAPI.TaskManager(0)
 app = Flask(__name__)
 Dates = ToolAPI.JsonAuto(None, "READ", PATH)
 Server = NormalAPI.APIs(Dates['PostIP'])
@@ -189,7 +189,7 @@ def Main():
 def Web():
     return render_template("index.html")
 
-Always_Task.append(Thread(target=Task, name="TaskManager"))
+Always_Task.append(Thread(target=Task.run, name="TaskManager"))
 Always_Task.append(Thread(target=AutoSave, name="DateAutoSave"))
 Always_Task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort']), name="FlaskServer"))
 
@@ -200,10 +200,11 @@ if __name__ == '__main__':
 
     # Bot看门狗
     while True:
-        TaskList:tuple[Thread] = (Thread(target=Task, name="TaskManager"), Thread(target=AutoSave, name="DateAutoSave"), Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort']), name="FlaskServer"))
+        TaskList:tuple[Thread] = (Thread(target=Task.run, name="TaskManager"), Thread(target=AutoSave, name="DateAutoSave"), Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort']), name="FlaskServer"))
         for each in Always_Task:
             if not each.is_alive():
+                print("Bot看门狗: 部分进程意外退出，正在尝试重新启动")
                 Index = Always_Task.index(each)
-                Always_Task[Index] =  TaskList[Index]
+                Always_Task[Index] = TaskList[Index]
                 Always_Task[Index].start()
         sleep(5)
