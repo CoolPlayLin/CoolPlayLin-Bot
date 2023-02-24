@@ -1,8 +1,8 @@
 FROM python:3.11.2-buster
 WORKDIR /app
 COPY . .
-RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install -r requirements.txt
+RUN python -m pip install --upgrade pip
+RUN python -m pip install -r requirements.txt
 
 RUN mkdir server \
     && curl -sSL -o go-cqhttp.tar.gz https://github.com/Mrs4s/go-cqhttp/releases/download/v1.0.0-rc4/go-cqhttp_linux_amd64.tar.gz \
