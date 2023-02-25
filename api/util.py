@@ -2,7 +2,7 @@ from pathlib import Path
 
 from threading import Thread, Lock
 import json, os
-from .typings import TaskManagerExit
+from .typings import TaskManagerExit, APIError
 
 __all__ = ("TaskManager", "Logger")
 
@@ -44,26 +44,37 @@ class TaskManager:
 FileLock = Lock()
 
 def JsonAuto(Json: dict, Action: str, PATH: Path) -> any:
-    DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": [], "Keys":{"Weather":None}}
-    if not PATH.exists():
-        with open(PATH, "w+", encoding="utf-8") as f:
-            f.write(json.dumps(DefaultJSON))
-    if Action == "WRITE":
-        with open(PATH, "w+", encoding="utf-8") as file:
-            file.write(json.dumps(Json))
-        return True
-    elif Action == "READ":
-        with open(PATH, "rt", encoding="utf-8") as file:
-            Res: dict = json.load(file)
-        if set(Res.keys()) != set(DefaultJSON.keys()):
-            Res.update({key: DefaultJSON[key] for key in DefaultJSON.keys() if key not in Res})
-        return Res
-    elif Action == "TEXT":
-        with open(PATH, "rt", encoding="utf-8") as file:
-            Res: dict = json.load(file)
-        return Res
-    else:
-        return False
+    with FileLock:
+        if PATH.stem+PATH.suffix == "config.json":
+            DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": []}
+            if not PATH.exists():
+                with open(PATH, "w+", encoding="utf-8") as f:
+                    f.write(json.dumps(DefaultJSON))
+            if Action == "WRITE":
+                with open(PATH, "w+", encoding="utf-8") as file:
+                    file.write(json.dumps(Json))
+                return True
+            elif Action == "READ":
+                with open(PATH, "rt", encoding="utf-8") as file:
+                    Res: dict = json.load(file)
+                if set(Res.keys()) != set(DefaultJSON.keys()):
+                    Res.update({key: DefaultJSON[key] for key in DefaultJSON.keys() if key not in Res})
+                return Res
+            elif Action == "TEXT":
+                with open(PATH, "rt", encoding="utf-8") as file:
+                    Res: dict = json.load(file)
+                return Res
+            else:
+                return False
+        elif PATH.stem+PATH.suffix == "API.json":
+            if PATH.exists():
+                if Action == "READ":
+                    with open(PATH, "rt", encoding="utf-8") as file:
+                        Res = json.loads(file.read())
+                    return Res
+            else:
+                error = APIError("文件API.json不存在")
+                raise error
 
 
 def BadWord(Message:str, BadWordList:list) -> bool:

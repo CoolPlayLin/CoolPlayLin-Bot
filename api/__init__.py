@@ -2,18 +2,19 @@
 CoolPlayLin-Bot的API基础
 """
 
-# 导入本地API
+# 导入依赖API
 from . import cqbotapi as NormalAPI
 from . import util as ToolAPI
 from . import typings
-
-# 导入依赖库
 import pathlib, random
 from requests import get
 
+# 加载必要数据
+API_PATH = pathlib.Path(__file__).parent.parent / "database" / "API.json"
+API = ToolAPI.JsonAuto(None, "READ", API_PATH)
+
 # 群聊消息处理
 def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Message_Id:int, Dates:dict) -> bool:
-
     if not isinstance(Server, NormalAPI.APIs):
         return False
     try:
@@ -49,9 +50,9 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                 Msg['全体禁言已停止'] = Group_id
 
             elif Message in [Dates["@Me"]+each for each in ["menu", "Menu", "MENU", "菜单","功能", "功能列表", "help", "帮助"]]:
-                Msg["Hello，我是由CoolPlayLin开发并维护的开源QQ机器人，采用GPLv3许可证，项目直达 -> https://github.com/CoolPlayLin/CoolPlayLin-Bot\n我目前的功能\n1. 一言：获取一言文案"] = Group_id
+                Msg[API["Introduce"]] = Group_id
             elif Message in [Dates["@Me"]+each for each in ["命令列表", "Command", "CommandList", "Command List", "All Command", "command", "命令"]]:
-                Msg["以下是所有管理员命令的列表\n1. Set Root 设置发送者为Root用户\n2. 开灯|关灯 关闭|启动全体禁言\n3. Show|Add|Del AdminGroup 展示|增加|删除管理的群聊\n4. Add This AdminGroup 将添加此群聊为所管理群聊\n5. Refuse|Accept 拒绝|同意请求\n6. Show|Add|Del Admin 展示|增加|删除管理员\n7. 禁言大转盘 随机分钟禁言\n8. 冷静 禁言1分钟"] = Group_id
+                Msg[API["CommandList"]] = Group_id
             elif Dates["@Me"]+"Show AdminGroup" in Message and Admin:
                 Msg['当前所管理的群\n{}'.format(Dates['AdminGroup'])] = Group_id
             elif Dates["@Me"]+"Add AdminGroup" in Message and Admin:
@@ -129,8 +130,26 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                         Msg["此用户不在Admin中"] = Group_id
             elif Dates["@Me"]+'Status' in Message:
                 Msg["功能未实现"] = Group_id
-            elif Message in [Dates["@Me"]+'获取一言', Dates["@Me"]+'一言', Dates["@Me"]+'文案']:
+            elif Message in [Dates["@Me"]+each for each in ['获取一言', '一言', '文案']]:
                 Msg[(get("https://v1.hitokoto.cn/").json()['hitokoto'])] = Group_id
+            elif Dates["@Me"]+"城市编码" in Message:
+                Message = Message.replace(Dates["@Me"]+"城市编码 ", "")
+                _ = [each for each in API["CityCode"] if Message in each[0]]
+                if len(_) > 0:
+                    _Msg = "我找到了如下城市："
+                    for each in _:
+                        _Msg += f"\n{each[0]}: {each[1]}"
+                    Msg[_Msg] = Group_id
+                else:
+                    Msg["似乎没有这个城市哦~"] = Group_id
+            elif Dates["@Me"]+"实时天气预报查询" in Message:
+                if API["Keys"]["Weather"] != None:
+                    Message = int(Message.replace(Dates["@Me"]+"实时天气预报查询 ", ""))
+                    Res = get("https://restapi.amap.com/v3/weather/weatherInfo?key={}&city={}&extensions=base".format(API["Keys"]["Weather"], Message)).json()["lives"]
+                    _ = "{}{} {} 天气预报如下:\n天气{}, {}风 风力{}, 温度{}℃ 湿度{}%".format(Res[0]["province"], Res[0]["city"], Res[0]["reporttime"], Res[0]["weather"], Res[0]["winddirection"], Res[0]["windpower"], Res[0]["temperature"], Res[0]["humidity"])
+                    Msg[_] = Group_id
+                else:
+                    Msg["你没有填入Key，无法请求"] = Group_id
             elif Dates["@Me"].replace(" ", "") in Message:
                 Msg["干啥子"] = Group_id
         # 集中发送消息
@@ -147,5 +166,4 @@ def retention(Server:NormalAPI.APIs, Dates:dict, PATH:pathlib.Path) -> None:
     if Dates["BotQQ"] is None:
         Dates.update({"BotQQ": Server.Get_Login_Info().json()['data']['user_id'], "@Me": "[CQ:at,qq={}] ".format(Server.Get_Login_Info().json()['data']['user_id'])})
     if Dates != ToolAPI.JsonAuto(None, "TEXT", PATH):
-        print(0000)
         ToolAPI.JsonAuto(Dates, "WRITE", PATH)

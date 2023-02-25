@@ -5,7 +5,7 @@ from threading import Thread
 
 # 加载必要数据
 app = Flask(__name__)
-PATH = pathlib.Path(__file__).parent / "database" / "Config.json"
+PATH = pathlib.Path(__file__).parent / "database" / "config.json"
 Always_Task:list[Thread] = []
 Task = ToolAPI.TaskManager(0)
 Dates = ToolAPI.JsonAuto(None, "READ", PATH)
