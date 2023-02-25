@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     # 看门狗
     while True:
-        TaskList:tuple[Thread] = (Thread(target=Task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0' ,port=Dates['AcceptPort']), name="FlaskServer"))
+        TaskList:tuple[Thread] = (Thread(target=Task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates['AcceptPort']), name="FlaskServer"))
         for each in Always_Task:
             if not each.is_alive():
                 print("看门狗: 部分进程意外退出，正在尝试重新启动")
