@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # Another File
-*.json
+Config.json
