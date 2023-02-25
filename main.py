@@ -1,16 +1,13 @@
 from api import *
-from flask import Flask, render_template
-from threading import Thread
-from flask import request
+from flask import Flask, render_template, request
 from time import sleep
-import pathlib
-PATH = pathlib.Path(__file__).parent / "Config.json"
-from requests import get
+from threading import Thread
 
 # 加载必要数据
+app = Flask(__name__)
+PATH = pathlib.Path(__file__).parent / "Config.json"
 Always_Task:list[Thread] = []
 Task = ToolAPI.TaskManager(0)
-app = Flask(__name__)
 Dates = ToolAPI.JsonAuto(None, "READ", PATH)
 Server = NormalAPI.APIs(Dates['PostIP'])
 
@@ -20,7 +17,9 @@ def Main():
     if request.json["post_type"] == "message":
         if request.json['message_type'] == 'group':
             Task.AddTask(Thread(target=Group_Msg, args=(Server, request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates)))
-            Task.AddTask(Thread(target=AutoSave, args=(Task, Server, Dates, PATH)))
+    
+    # 更新数据
+    Task.AddTask(Thread(target=retention, args=(Server, Dates, PATH)))
     return 'ok'
 
 # Web页面路由
