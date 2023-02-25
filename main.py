@@ -14,6 +14,8 @@ Server = NormalAPI.APIs(Dates['PostIP'])
 # POST数据路由
 @app.route("/commit", methods=['POST'])
 def Main():
+    global Dates
+
     if request.json["post_type"] == "message":
         if request.json['message_type'] == 'group':
             Task.AddTask(Thread(target=Group_Msg, args=(Server, request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates)))

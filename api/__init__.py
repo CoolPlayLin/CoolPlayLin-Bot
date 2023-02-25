@@ -146,5 +146,6 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
 def retention(Server:NormalAPI.APIs, Dates:dict, PATH:pathlib.Path) -> None:
     if Dates["BotQQ"] is None:
         Dates.update({"BotQQ": Server.Get_Login_Info().json()['data']['user_id'], "@Me": "[CQ:at,qq={}] ".format(Server.Get_Login_Info().json()['data']['user_id'])})
-    if Dates != ToolAPI.JsonAuto(None, "READ", PATH):
+    if Dates != ToolAPI.JsonAuto(None, "TEXT", PATH):
+        print(0000)
         ToolAPI.JsonAuto(Dates, "WRITE", PATH)

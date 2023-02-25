@@ -6,8 +6,6 @@ from .typings import TaskManagerExit
 
 __all__ = ("TaskManager", "Logger")
 
-DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": [], "Keys":{"Weather":None}}
-
 class TaskManager:
     __slots__ = ("Perform_QueuingTask", "Perform_RunningTask", "Status", "TaskLimit")
     def __init__(self, TaskLimit:int) -> None:
@@ -45,34 +43,28 @@ class TaskManager:
 
 FileLock = Lock()
 
-def JsonAuto(Json:dict, Action:str, PATH:Path) -> any:
+def JsonAuto(Json: dict, Action: str, PATH: Path) -> any:
+    DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": [], "Keys":{"Weather":None}}
     if not PATH.exists():
-        with FileLock:
-            with open(PATH, "w+", encoding="utf-8") as f:
-                f.write(json.dumps(DefaultJSON))
-    FileName = PATH.stem+PATH.suffix
+        with open(PATH, "w+", encoding="utf-8") as f:
+            f.write(json.dumps(DefaultJSON))
     if Action == "WRITE":
-        try:
-            with FileLock:
-                with open(PATH, "w+", encoding="utf-8") as file:
-                    file.write(json.dumps(Json))
-                return True
-        except:
-            return False
+        with open(PATH, "w+", encoding="utf-8") as file:
+            file.write(json.dumps(Json))
+        return True
     elif Action == "READ":
-        try:
-            with FileLock:
-                with open(PATH, "rt", encoding="utf-8") as file:
-                    Res:dict = json.loads(file.read())
-            if Res.keys() == DefaultJSON.keys():
-                return Res
-            else:
-                raise Exception
-        except:
-            os.remove(PATH)
-            return DefaultJSON
+        with open(PATH, "rt", encoding="utf-8") as file:
+            Res: dict = json.load(file)
+        if set(Res.keys()) != set(DefaultJSON.keys()):
+            Res.update({key: DefaultJSON[key] for key in DefaultJSON.keys() if key not in Res})
+        return Res
+    elif Action == "TEXT":
+        with open(PATH, "rt", encoding="utf-8") as file:
+            Res: dict = json.load(file)
+        return Res
     else:
         return False
+
 
 def BadWord(Message:str, BadWordList:list) -> bool:
     if len([each for each in BadWordList if each in Message]) > 0:
