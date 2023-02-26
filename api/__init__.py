@@ -11,7 +11,9 @@ from requests import get
 
 # 加载必要数据
 API_PATH = pathlib.Path(__file__).parent.parent / "database" / "API.json"
+LOG_PATH = pathlib.Path(__file__).parent.parent / "database" / "running.log"
 API = ToolAPI.JsonAuto(None, "READ", API_PATH)
+logger = ToolAPI.Logger(LOG_PATH)
 
 # 群聊消息处理
 def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Message_Id:int, Dates:dict) -> bool:
@@ -192,11 +194,16 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
         return True
     except BaseException as e:
         Server.Send_Group_Msg(Group_id, "错误：\n{}".format(e))
+        logger.error(e)
         raise
 
 # 数据保存
 def retention(Server:NormalAPI.APIs, Dates:dict, PATH:pathlib.Path) -> None:
     if Dates["BotQQ"] is None:
+        logger.event("正在将当前登录QQ的数据写入config.json")
         Dates.update({"BotQQ": Server.Get_Login_Info().json()['data']['user_id'], "@Me": "[CQ:at,qq={}] ".format(Server.Get_Login_Info().json()['data']['user_id'])})
+        logger.event("数据写入成功完成")
     if Dates != ToolAPI.JsonAuto(None, "TEXT", PATH):
+        logger.event("运行数据发生更改，正在保存到本地")
         ToolAPI.JsonAuto(Dates, "WRITE", PATH)
+        logger.event("数据写入成功完成")

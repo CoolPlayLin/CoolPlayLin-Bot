@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from threading import Thread, Lock
-import json, os
+import json, time
 from .typings import TaskManagerExit, APIError
 
 __all__ = ("TaskManager", "Logger")
@@ -82,3 +82,39 @@ def BadWord(Message:str, BadWordList:list) -> bool:
         return True
     else:
         return False
+
+class Logger:
+    __slots__ = ("PATH", "FileLock")
+    def __init__(self, PATH:Path) -> None:
+        if not isinstance(PATH, Path):
+            raise TypeError
+        elif not PATH.is_file:
+            raise TypeError
+        elif not PATH.exists():
+            with open(PATH, "w+", encoding="utf-8") as f:
+                f.close
+        else:
+            with open(PATH, "a", encoding="utf-8") as f:
+                f.write("\n=====分界线=====\n\n")
+        self.PATH = PATH
+        self.FileLock = Lock()
+    def error(self, msg:str):
+        with self.FileLock:
+            with open(self.PATH, "a", encoding="utf-8") as f:
+                f.write("{} Error: {}\n".format(time.strftime(r"%Y-%m-%d %H:%M:%S"), msg))
+    def event(self, msg:str):
+        with self.FileLock:
+            with open(self.PATH, "a", encoding="utf-8") as f:
+                f.write("{} Event: {}\n".format(time.strftime(r"%Y-%m-%d %H:%M:%S"), msg))
+    def warn(self, msg:str):
+        with self.FileLock:
+            with open(self.PATH, "a", encoding="utf-8") as f:
+                f.write("{} Warning: {}\n".format(time.strftime(r"%Y-%m-%d %H:%M:%S"), msg))
+    def read(self):
+        with self.FileLock:
+            with open(self.PATH, "rt", encoding="utf-8") as f:
+                return f.read()
+    def html(self):
+        with self.FileLock:
+            with open(self.PATH, "rt", encoding="utf-8") as f:
+                return f.read().replace("\n", "<br>")
