@@ -20,6 +20,7 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
     try:
         Msg = {}
         Admin:bool = (Group_id in Dates["AdminGroup"])
+        amap:bool = (API["keys"]["amap"] != None)
 
         if User_id in Dates['NotAllowUser']:
             Msg['管理员不允许你使用'] = Group_id
@@ -142,15 +143,47 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                     Msg[_Msg] = Group_id
                 else:
                     Msg["似乎没有这个城市哦~"] = Group_id
-            elif Dates["@Me"]+"实时天气预报查询" in Message:
-                if API["Keys"]["Weather"] != None:
-                    Message = int(Message.replace(Dates["@Me"]+"实时天气预报查询 ", ""))
-                    Res = get("https://restapi.amap.com/v3/weather/weatherInfo?key={}&city={}&extensions=base".format(API["Keys"]["Weather"], Message)).json()["lives"]
-                    _ = "{}{} {} 天气预报如下:\n天气{}, {}风 风力{}, 温度{}℃ 湿度{}%".format(Res[0]["province"], Res[0]["city"], Res[0]["reporttime"], Res[0]["weather"], Res[0]["winddirection"], Res[0]["windpower"], Res[0]["temperature"], Res[0]["humidity"])
-                    Msg[_] = Group_id
+            elif Dates["@Me"]+"实时天气预报" in Message:
+                if amap:
+                    city = int(Message.replace(Dates["@Me"]+"实时天气预报", "").replace("查询", "").replace(" ", ""))
+                    Res = get("https://restapi.amap.com/v3/weather/weatherInfo?key={}&city={}&extensions=base".format(API["keys"]["amap"], city)).json()
+                    if int(Res["status"]) == 1:
+                        Res = Res["lives"][0]
+                        _ = "{}{} {} 天气预报如下:\n天气{}, {}风 风力{}, 温度{}℃ 湿度{}%".format(Res["province"], Res["city"], Res["reporttime"], Res["weather"], Res["winddirection"], Res["windpower"], Res["temperature"], Res["humidity"]) if len(Res) > 0 else "未查询到有关 {} 的任何天气情况".format(city)
+                        Msg[_] = Group_id
+                    else:
+                        Msg[f"请求失败, 状态代码为{Res['status']}, 错误原因为{Res['info']}"] = Group_id
                 else:
-                    Msg["你没有填入Key，无法请求"] = Group_id
-            elif Dates["@Me"].replace(" ", "") in Message:
+                    Msg["你没有填入Key, 无法请求"] = Group_id
+            elif Dates["@Me"]+"未来天气预报" in Message:
+                if amap:
+                    city = int(Message.replace(Dates["@Me"]+"未来天气预报", "").replace("查询", "").replace(" ", ""))
+                    Res = get("https://restapi.amap.com/v3/weather/weatherInfo?key={}&city={}&extensions=all".format(API["keys"]["amap"], city)).json()
+                    if int(Res["status"]) == 1:
+                        Res = Res["forecasts"][0]
+                        if len(Res["casts"]) > 0:
+                            _ = "{}{} 未来天气情况如下：".format(Res["province"], Res["city"])
+                            for each in Res["casts"]:
+                                _ += "\n{}\n白天{} {}风{}级 气温{}℃\n晚上{} {}风{}级 气温{}℃".format(each["date"], each["dayweather"], each["daywind"], each["daypower"], each["daytemp"], each["nightweather"], each["nightwind"], each["nightpower"], each["nighttemp"])
+                        else:
+                            _ = "未查询到有关 {} 的任何天气情况".format(city)
+                        Msg[_] = Group_id
+                    else:
+                        Msg[f"请求失败, 状态代码为{Res['status']}, 错误原因为{Res['info']}"] = Group_id
+                else:
+                    Msg["你没有填入Key, 无法请求"] = Group_id
+            elif Dates["@Me"]+"IP定位" in Message:
+                if amap:
+                    ip = Message.replace(Dates["@Me"]+"IP定位", "").replace(" ", "")
+                    Res = get("https://restapi.amap.com/v3/ip?key={}&ip={}".format(API["keys"]["amap"], ip)).json()
+                    if int(Res['status']) == 1:
+                        _ = "{} 位于{}{}\n坐标为{}\n该城市的编码为 {}".format(ip, Res["province"], Res["city"], Res["rectangle"], Res["adcode"]) if len(Res["rectangle"]) > 0 else f"没有查询到 {ip} 的信息"
+                        Msg[_] = Group_id
+                    else:
+                        Msg[f"请求失败, 状态代码为{Res['status']}, 错误原因为{Res['info']}"] = Group_id
+                else:
+                    Msg["你没有填入Key, 无法请求"] = Group_id
+            elif Dates["@Me"] in Message:
                 Msg["干啥子"] = Group_id
         # 集中发送消息
         Msgs = Msg.keys()
