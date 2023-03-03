@@ -1,3 +1,6 @@
+"""
+CoolPlayLin-Bot工具类
+"""
 from pathlib import Path
 
 from threading import Thread, Lock
@@ -122,3 +125,8 @@ class Logger:
         with self.FileLock:
             with open(self.PATH, "rt", encoding="utf-8") as f:
                 return f.read().replace("\n", "<br>")
+
+def clean_up(chore:str ,clean:list) -> str:
+    for each in clean:
+        chore = chore.replace(each, "")
+    return chore
