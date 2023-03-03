@@ -21,11 +21,12 @@ else:
 app = Flask(__name__)
 PATH = pathlib.Path(__file__).parent.parent / "database" / "config.json"
 Dates = ToolAPI.JsonAuto(None, "READ", PATH)
-Server = NormalAPI.APIs(Dates['PostIP'])
 Task = ToolAPI.TaskManager(0)
 API_PATH = pathlib.Path(__file__).parent.parent / "database" / "API.json"
 LOG_PATH = pathlib.Path(__file__).parent.parent / "database" / "running.log"
 API = ToolAPI.JsonAuto(None, "READ", API_PATH)
+Server = NormalAPI.APIs(Dates['PostIP'])
+Server_amap = NormalAPI.Amap(API["keys"]["amap"])
 logger = ToolAPI.Logger(LOG_PATH)
 
 # 群聊消息处理
@@ -159,9 +160,9 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                 else:
                     Msg["似乎没有这个城市哦~"] = Group_id
             elif Dates["@Me"]+"实时天气预报" in Message:
-                if amap:
+                if Server_amap.key:
                     city = int(Message.replace(Dates["@Me"]+"实时天气预报", "").replace("查询", "").replace(" ", ""))
-                    Res = get("https://restapi.amap.com/v3/weather/weatherInfo?key={}&city={}&extensions=base".format(API["keys"]["amap"], city)).json()
+                    Res = Server_amap.forecasters(city, "base").json()
                     if int(Res["status"]) == 1:
                         Res = Res["lives"][0]
                         _ = "{}{} {} 天气预报如下:\n天气{}, {}风 风力{}, 温度{}℃ 湿度{}%".format(Res["province"], Res["city"], Res["reporttime"], Res["weather"], Res["winddirection"], Res["windpower"], Res["temperature"], Res["humidity"]) if len(Res) > 0 else "未查询到有关 {} 的任何天气情况".format(city)
@@ -171,9 +172,9 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                 else:
                     Msg["你没有填入Key, 无法请求"] = Group_id
             elif Dates["@Me"]+"未来天气预报" in Message:
-                if amap:
+                if Server_amap.key:
                     city = int(Message.replace(Dates["@Me"]+"未来天气预报", "").replace("查询", "").replace(" ", ""))
-                    Res = get("https://restapi.amap.com/v3/weather/weatherInfo?key={}&city={}&extensions=all".format(API["keys"]["amap"], city)).json()
+                    Res = Server_amap.forecasters(city, "all").json()
                     if int(Res["status"]) == 1:
                         Res = Res["forecasts"][0]
                         if len(Res["casts"]) > 0:
@@ -188,9 +189,9 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                 else:
                     Msg["你没有填入Key, 无法请求"] = Group_id
             elif Dates["@Me"]+"IP定位" in Message:
-                if amap:
+                if Server_amap.key:
                     ip = Message.replace(Dates["@Me"]+"IP定位", "").replace(" ", "")
-                    Res = get("https://restapi.amap.com/v3/ip?key={}&ip={}".format(API["keys"]["amap"], ip)).json()
+                    Res = Server_amap.ip_positioning(ip).json()
                     if int(Res['status']) == 1:
                         _ = "{} 位于{}{}\n坐标为{}\n该城市的编码为 {}".format(ip, Res["province"], Res["city"], Res["rectangle"], Res["adcode"]) if len(Res["rectangle"]) > 0 else "没有查询到 {} 的信息".format(ip)
                         Msg[_] = Group_id

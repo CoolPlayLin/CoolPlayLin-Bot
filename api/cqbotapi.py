@@ -4,8 +4,9 @@ Go-cqhttp的API库
 
 import requests
 
-__all__ = ('APIs')
+__all__ = ('APIs', "Amap")
 
+# Go-cqhttp的API
 class APIs:
     __slots__ = ('Server', 'Verify', 'AccessKey')
     def __init__(self, Server:str, head:str="http://", Verify:bool=False, AccessKey:str=False, Online:bool=True) -> None:
@@ -222,4 +223,16 @@ class APIs:
             "message_id": message_id
         }
         Response = requests.post("{}/delete_msg".format(self.Server), data=Date)
+        return Response
+
+# 高德地图API
+class Amap:
+    __slots__ = ("key")
+    def __init__(self, key:str) -> None:
+        self.key = key
+    def ip_positioning(self, ip:str) -> requests.Response:
+        Response = requests.get("https://restapi.amap.com/v3/ip?key={}&ip={}".format(self.key, ip))
+        return Response
+    def forecasters(self, city, extensions) -> requests.Response:
+        Response = requests.get("https://restapi.amap.com/v3/weather/weatherInfo?key={}&city={}&extensions={}".format(self.key, city, extensions))
         return Response
