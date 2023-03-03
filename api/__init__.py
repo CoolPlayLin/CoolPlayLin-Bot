@@ -1,15 +1,28 @@
 """
-CoolPlayLin-Bot的API基础
+CoolPlayLin-Bot的API基础与功能实现
+
+核心代码，不支持直接启动
 """
 
 # 导入依赖API
-from . import cqbotapi as NormalAPI
-from . import util as ToolAPI
-from . import typings
-import pathlib, random
-from requests import get
+if __name__ != "__main__":
+    from flask import Flask, render_template, request
+    from threading import Thread
+    from . import cqbotapi as NormalAPI
+    from . import util as ToolAPI
+    from . import typings
+    import pathlib, random
+    from requests import get
+else:
+    print("本程序需要启动器进行启动，不允许直接运行")
+    quit(0)
 
 # 加载必要数据
+app = Flask(__name__)
+PATH = pathlib.Path(__file__).parent.parent / "database" / "config.json"
+Dates = ToolAPI.JsonAuto(None, "READ", PATH)
+Server = NormalAPI.APIs(Dates['PostIP'])
+Task = ToolAPI.TaskManager(0)
 API_PATH = pathlib.Path(__file__).parent.parent / "database" / "API.json"
 LOG_PATH = pathlib.Path(__file__).parent.parent / "database" / "running.log"
 API = ToolAPI.JsonAuto(None, "READ", API_PATH)
@@ -207,3 +220,25 @@ def retention(Server:NormalAPI.APIs, Dates:dict, PATH:pathlib.Path) -> None:
         logger.event("运行数据发生更改，正在保存到本地")
         ToolAPI.JsonAuto(Dates, "WRITE", PATH)
         logger.event("数据写入成功完成")
+
+# POST数据路由
+@app.route("/commit", methods=['POST'])
+def Main():
+    if request.json["post_type"] == "message":
+        if request.json['message_type'] == 'group':
+            Task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))))
+            Task.AddTask(Thread(target=Group_Msg, args=(Server, request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates)))
+        elif request.json['message_type'] == 'private':
+            Task.AddTask(Thread(target=Server.Send_Private_Msg, args=(request.json['user_id'], "我暂时无法为你服务~")))
+    
+    # 更新数据
+    Task.AddTask(Thread(target=retention, args=(Server, Dates, PATH)))
+    return 'ok'
+
+# Web页面路由
+@app.route("/", methods=['GET', "POST"])
+def Web():
+    if "log" in dict(request.args):
+        return logger.html()
+    else:
+        return render_template("index.html")
