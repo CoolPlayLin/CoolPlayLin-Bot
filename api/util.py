@@ -40,10 +40,15 @@ class TaskManager:
             return True
         else:
             return False
+    
+    def __delattr__(self, __name: str) -> None:
+        error = TypeError("不允许删除任何内部数据")
+        raise error
 
 FileLock = Lock()
 
 def JsonAuto(Json: dict, Action: str, PATH: Path) -> any:
+
     with FileLock:
         if PATH.stem+PATH.suffix == "config.json":
             DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": []}
@@ -73,8 +78,7 @@ def JsonAuto(Json: dict, Action: str, PATH: Path) -> any:
                         Res = json.loads(file.read())
                     return Res
             else:
-                error = APIError("文件API.json不存在")
-                raise error
+                return False
 
 
 def BadWord(Message:str, BadWordList:list) -> bool:

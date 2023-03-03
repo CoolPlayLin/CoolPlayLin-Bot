@@ -236,3 +236,9 @@ class Amap:
     def forecasters(self, city, extensions) -> requests.Response:
         Response = requests.get("https://restapi.amap.com/v3/weather/weatherInfo?key={}&city={}&extensions={}".format(self.key, city, extensions))
         return Response
+
+class OtherAPI:
+    __slots__ = ()
+    def copy(self) -> requests.Response:
+        Response = requests.get("https://v1.hitokoto.cn/")
+        return Response
