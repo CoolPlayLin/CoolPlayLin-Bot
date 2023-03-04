@@ -3,27 +3,17 @@ Go-cqhttp的API库
 """
 
 import requests
+from revChatGPT.V3 import Chatbot
 
 __all__ = ('APIs', "Amap")
 
 # Go-cqhttp的API
 class APIs:
     __slots__ = ('Server', 'Verify', 'AccessKey')
-    def __init__(self, Server:str, head:str="http://", Verify:bool=False, AccessKey:str=False, Online:bool=True) -> None:
+    def __init__(self, Server:str, head:str="http://", Verify:bool=False, AccessKey:str=False) -> None:
         self.Server = head+Server
         self.Verify = Verify
         # self.AccessKey = AccessKey
-        if Online:
-            try:
-                Status = requests.get(self.Server).status_code
-            except:
-                Status = False
-            if Status in (403, 401):
-                print("主机拒绝了连接, AccessKey似乎不正确哦~")
-            if Status == 404:
-                print("主机的返回代码很玄学, 请检查IP是否正确哦~")
-            elif not Status:
-                print("主机拒绝了这次连接, 请确认防火墙和IP是否正确哦~")
     def Send_Private_Msg(self, user_id:int, message:str, group_id:int=False, auto_escape:bool=False) -> requests.Response:
         Date = {
             'user_id': user_id,
@@ -237,8 +227,15 @@ class Amap:
         Response = requests.get("https://restapi.amap.com/v3/weather/weatherInfo?key={}&city={}&extensions={}".format(self.key, city, extensions))
         return Response
 
+# 其他杂七杂八的API
 class OtherAPI:
-    __slots__ = ()
+    __slots__ = ("chatgpt_token")
+    def __init__(self, chatgpt_token:str) -> None:
+        self.chatgpt_token = chatgpt_token
     def copy(self) -> requests.Response:
         Response = requests.get("https://v1.hitokoto.cn/")
+        return Response
+    def chatgpt(self, msg) -> str:
+        chatbot = Chatbot(self.chatgpt_token)
+        Response = chatbot.ask(msg)
         return Response

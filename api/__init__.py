@@ -42,7 +42,7 @@ if not API:
 # 实例化所需API
 Server = NormalAPI.APIs(Dates['PostIP'])
 Server_amap = NormalAPI.Amap(API["keys"]["amap"])
-Server_others = NormalAPI.OtherAPI()
+Server_others = NormalAPI.OtherAPI(API["keys"]["chatgpt"])
 
 # 群聊消息处理
 def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Message_Id:int, Dates:dict, clean_up:ToolAPI.clean_up, amap:NormalAPI.Amap, others:NormalAPI.OtherAPI) -> bool:
@@ -80,7 +80,7 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
 
                 elif clean_up(Message, [" "]) in ["menu", "Menu", "MENU", "菜单", "功能", "功能列表", "help", "帮助", "你好", "Hello", "hello"]:
                     Msg[API["Introduce"]] = Group_id
-                elif Message in ["命令列表", "Command", "CommandList", "Command List", "All Command", "command", "命令"]:
+                elif clean_up(Message, [" "]) in ["命令列表", "Command", "CommandList", "Command List", "All Command", "command", "命令"]:
                     Msg[API["CommandList"]] = Group_id
                 elif "AdminGroup.show" in Message and Admin:
                     Msg['当前所管理的群\n{}'.format(Dates['AdminGroup'])] = Group_id
@@ -209,6 +209,16 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                             Msg[_] = Group_id
                         else:
                             Msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = Group_id
+                    else:
+                        Msg["你没有填入Key, 无法请求"] = Group_id
+                elif "ChatGPT" in Message:
+                    if others.chatgpt_token:
+                        _msg = clean_up(Message, ["ChatGPT", " "])
+                        try:
+                            Res = "以下是ChatGPT的回答:\n{}".format(others.chatgpt(_msg))
+                            Msg[Res] = Group_id
+                        except:
+                            Msg["请求失败，可能是由于网络原因"] = Group_id
                     else:
                         Msg["你没有填入Key, 无法请求"] = Group_id
                 else:

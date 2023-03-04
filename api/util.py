@@ -35,8 +35,8 @@ class TaskManager:
             except BaseException as e:
                 break
         if self.Status:
-            Error = TaskManagerExit("任务管理器异常退出")
-            raise Error
+            error = TaskManagerExit("任务管理器异常退出")
+            raise error
     def AddTask(self, Task:Thread) -> bool:
         if isinstance(Task, Thread):
             self.Perform_QueuingTask.append(Task)
