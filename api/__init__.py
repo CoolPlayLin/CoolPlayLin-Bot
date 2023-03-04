@@ -50,7 +50,6 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
         return False
     try:
         if Dates["@Me"] in Message:
-            print(Message)
             Message = clean_up(Message, [Dates["@Me"]])
             Msg = {}
             Admin:bool = (User_id in Dates["Admin"])
@@ -85,16 +84,16 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                     Msg[API["CommandList"]] = Group_id
                 elif "AdminGroup.show" in Message and Admin:
                     Msg['当前所管理的群\n{}'.format(Dates['AdminGroup'])] = Group_id
+                elif "AdminGroup.append!" in Message and Admin:
+                    if User_id in Dates['Admin']:
+                        Dates['AdminGroup'].append(Group_id)
+                        Msg['保存成功\n{}'.format(Dates['AdminGroup'])] = Group_id
+                    else:
+                        Msg["你没有Admin权限"] = Group_id
                 elif "AdminGroup.append" in Message and Admin:
                     if User_id in Dates['Admin']:
                         Group = int(clean_up(Message ,["AdminGroup.append"]))
                         Dates['AdminGroup'].append(Group)
-                        Msg['保存成功\n{}'.format(Dates['AdminGroup'])] = Group_id
-                    else:
-                        Msg["你没有Admin权限"] = Group_id
-                elif "AdminGroup.append!" in Message and Admin:
-                    if User_id in Dates['Admin']:
-                        Dates['AdminGroup'].append(Group_id)
                         Msg['保存成功\n{}'.format(Dates['AdminGroup'])] = Group_id
                     else:
                         Msg["你没有Admin权限"] = Group_id
