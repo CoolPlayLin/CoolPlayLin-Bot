@@ -1,4 +1,4 @@
-FROM python:3.11.2-buster
+FROM python:3.11.0-bullseye
 
 WORKDIR /app
 COPY . .
@@ -19,4 +19,4 @@ RUN python -m pip install -r requirements.txt --upgrade
 # 暴露端口
 EXPOSE 5120
 
-CMD ["/app/server/go-cqhttp", "-c", "/app/server/config.yml", "&", "python3", "main.py"]
+CMD ["python3", "main.py",  "&", "cd", "server", "&&", "/app/server/go-cqhttp", "-c", "/app/server/config.yml"]

@@ -290,7 +290,14 @@ def Main():
 # Web页面路由
 @app.route("/", methods=['GET', "POST"])
 def Web():
-    if "log" in dict(request.args):
-        return logger.html()
+    Res = dict(request.args)
+    if "page" in Res:
+        print(Res)
+        if Res["page"] == '1':
+            return render_template("index.html")
+        elif Res["page"] == '2':
+            return logger.html()
+        else:
+            return "404"
     else:
         return render_template("index.html")

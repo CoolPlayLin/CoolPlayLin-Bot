@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/mdui.min.css">
+    <script src="/static/mdui.min.js"></script>
+    <title>Config File Edit</title>
+</head>
+
+<body>
+    <form action="/api" method="post">
+        <div class="mdui-textfield mdui-textfield-floating-label">
+            <label class="mdui-textfield-label">QQ号</label>
+            <input class="mdui-textfield-input" type="qq" />
+        </div>
+        <div class="mdui-textfield mdui-textfield-floating-label">
+            <label class="mdui-textfield-label">QQ密码</label>
+            <input class="mdui-textfield-input" type="password" />
+        </div><br>
+        <input class="mdui-btn mdui-btn-raised mdui-ripple" type="submit" value="提交">
+    </form>
+</body>
+
+</html>
