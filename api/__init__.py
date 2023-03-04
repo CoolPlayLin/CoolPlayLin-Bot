@@ -81,7 +81,16 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                 elif clean_up(Message, [" "]) in ["menu", "Menu", "MENU", "菜单", "功能", "功能列表", "help", "帮助", "你好", "Hello", "hello"]:
                     Msg[API["Introduce"]] = Group_id
                 elif clean_up(Message, [" "]) in ["命令列表", "Command", "CommandList", "Command List", "All Command", "command", "命令"]:
-                    Msg[API["CommandList"]] = Group_id
+                    Msg[API["Command"]] = Group_id
+                elif "命令查找" in Message:
+                    _ = [each for each in API["CommandList"].keys() if clean_up(Message, ["命令查找", " "]) in each]
+                    if len(_) > 0:
+                        _msg = "我找到了如下命令："
+                        for each in _:
+                            _msg += "\n{}\n{}".format(each, API["CommandList"][each])
+                        Msg[_msg] = Group_id
+                    else:
+                        Msg["我没有找到有关 {} 的命令".format(clean_up(Message, ["命令查找", " "]))] = Group_id
                 elif "AdminGroup.show" in Message and Admin:
                     Msg['当前所管理的群\n{}'.format(Dates['AdminGroup'])] = Group_id
                 elif "AdminGroup.append!" in Message and Admin:
@@ -215,7 +224,8 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                     if others.chatgpt_token:
                         _msg = clean_up(Message, ["ChatGPT", " "])
                         try:
-                            Res = "以下是ChatGPT的回答:\n{}".format(others.chatgpt(_msg))
+                            _ = others.chatgpt(_msg, API["gptproxy"]) if API["gptproxy"] else others.chatgpt(_msg)
+                            Res = "以下是ChatGPT的回答:\n{}".format(_)
                             Msg[Res] = Group_id
                         except:
                             Msg["请求失败，可能是由于网络原因"] = Group_id

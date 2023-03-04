@@ -235,7 +235,10 @@ class OtherAPI:
     def copy(self) -> requests.Response:
         Response = requests.get("https://v1.hitokoto.cn/")
         return Response
-    def chatgpt(self, msg) -> str:
-        chatbot = Chatbot(self.chatgpt_token)
+    def chatgpt(self, msg:str, proxy:str=None) -> str:
+        if proxy:
+            chatbot = Chatbot(self.chatgpt_token, proxy=proxy)
+        else:
+            chatbot = Chatbot(self.chatgpt_token)
         Response = chatbot.ask(msg)
         return Response
