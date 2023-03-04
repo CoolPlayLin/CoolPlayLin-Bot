@@ -17,7 +17,7 @@ class TaskManager:
         self.TaskLimit = TaskLimit
         self.Status = True
     
-    def run(self):
+    def run(self) -> bool:
         while self.Status:
             try:
                 if len(self.Perform_QueuingTask)+len(self.Perform_RunningTask) > 0:
@@ -37,6 +37,7 @@ class TaskManager:
         if self.Status:
             error = TaskManagerExit("任务管理器异常退出")
             raise error
+        return True
     def AddTask(self, Task:Thread) -> bool:
         if isinstance(Task, Thread):
             self.Perform_QueuingTask.append(Task)
@@ -50,7 +51,7 @@ class TaskManager:
 
 FileLock = Lock()
 
-def JsonAuto(Json: dict, Action: str, PATH: Path) -> any:
+def JsonAuto(Json: dict, Action: str, PATH: Path):
 
     with FileLock:
         if PATH.stem+PATH.suffix == "config.json":
@@ -105,23 +106,26 @@ class Logger:
                 f.write("\n=====分界线=====\n\n")
         self.PATH = PATH
         self.FileLock = Lock()
-    def error(self, msg:str):
+    def error(self, msg:str) -> bool:
         with self.FileLock:
             with open(self.PATH, "a", encoding="utf-8") as f:
                 f.write("{} Error: {}\n".format(time.strftime(r"%Y-%m-%d %H:%M:%S"), msg))
-    def event(self, msg:str):
+                return True
+    def event(self, msg:str) -> bool:
         with self.FileLock:
             with open(self.PATH, "a", encoding="utf-8") as f:
                 f.write("{} Event: {}\n".format(time.strftime(r"%Y-%m-%d %H:%M:%S"), msg))
-    def warn(self, msg:str):
+                return True
+    def warn(self, msg:str) -> bool:
         with self.FileLock:
             with open(self.PATH, "a", encoding="utf-8") as f:
                 f.write("{} Warning: {}\n".format(time.strftime(r"%Y-%m-%d %H:%M:%S"), msg))
-    def read(self):
+                return True
+    def read(self) -> str:
         with self.FileLock:
             with open(self.PATH, "rt", encoding="utf-8") as f:
                 return f.read()
-    def html(self):
+    def html(self) -> str:
         with self.FileLock:
             with open(self.PATH, "rt", encoding="utf-8") as f:
                 res = """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="icon" href="/static/favicon.ico" type="image/x-icon"><link rel="stylesheet" href="/static/mdui.min.css"><script src="/static/mdui.min.js"></script><title>Logs</title></head><body>{}</body></html>""".format(f.read().replace("\n", "<br>"))

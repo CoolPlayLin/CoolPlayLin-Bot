@@ -260,7 +260,7 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
         raise
 
 # 数据保存
-def retention(Server:NormalAPI.APIs, Dates:dict, PATH:pathlib.Path) -> None:
+def retention(Server:NormalAPI.APIs, Dates:dict, PATH:pathlib.Path) -> bool:
     if Dates["BotQQ"] is None:
         logger.event("正在将当前登录QQ的数据写入config.json")
         Dates.update({"BotQQ": Server.Get_Login_Info().json()['data']['user_id'], "@Me": "[CQ:at,qq={}]".format(Server.Get_Login_Info().json()['data']['user_id'])})
@@ -269,6 +269,7 @@ def retention(Server:NormalAPI.APIs, Dates:dict, PATH:pathlib.Path) -> None:
         logger.event("运行数据发生更改，正在保存到本地")
         ToolAPI.JsonAuto(Dates, "WRITE", PATH)
         logger.event("数据写入成功完成")
+    return True
 
 # POST数据路由
 @app.route("/commit", methods=['POST'])
@@ -281,7 +282,7 @@ def Main():
             Task.AddTask(Thread(target=Server.Send_Private_Msg, args=(request.json['user_id'], "我暂时无法为你服务~")))
     elif request.json["post_type"] == "meta_event":
         if request.json["meta_event_type"] == "heartbeat":
-            Task.AddTask(Thread(target=logger.event, kwargs=dict(msg="接收到发来的心跳包，机器人在线")))
+            Task.AddTask(Thread(target=logger.event, kwargs=dict(msg="接收到心跳包，机器人在线")))
     
     # 更新数据
     Task.AddTask(Thread(target=retention, args=(Server, Dates, PATH)))
@@ -292,7 +293,6 @@ def Main():
 def Web():
     Res = dict(request.args)
     if "page" in Res:
-        print(Res)
         if Res["page"] == '1':
             return render_template("index.html")
         elif Res["page"] == '2':

@@ -1,11 +1,11 @@
 __all__ = ("BotError", "TaskManagerExit", "APIError")
 
-from abc import ABCMeta, abstractclassmethod
+from abc import ABCMeta, abstractmethod
 class BotError(Exception, metaclass=ABCMeta):
-    @abstractclassmethod
+    @abstractmethod
     def __init__(self, *args: object) -> None:
         try:
-            self.add_note("你可以提交Issues来反馈这个问题")
+            super().add_note("你可以提交Issues来反馈这个问题")
         except:
             pass
 
