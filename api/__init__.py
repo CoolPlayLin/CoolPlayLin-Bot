@@ -58,7 +58,7 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
 
             if User_id in Dates['NotAllowUser']:
                 Msg['管理员不允许你使用'] = Group_id
-            elif ToolAPI.BadWord(Message, Dates['BadWords']):
+            elif ToolAPI.BadWord(Message, Dates['BadWords']) and AdminGroup:
                     Server.Delete_Msg(message_id=Message_Id)
                     Msg["检测到敏感内容, 已尝试撤回"] = Group_id
             else:
@@ -167,7 +167,7 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                         else:
                             Msg["此用户不在Admin中"] = Group_id
                 elif 'Status' in Message:
-                    Msg["功能未实现"] = Group_id
+                    Msg["状态如下:\n{}个任务正在排队\n{}个任务正在运行".format(len(Task.Perform_QueuingTask), len(Task.Perform_RunningTask))] = Group_id
                 elif Message in [each for each in ['获取一言', '一言', '文案']]:
                     Msg[(others.copy().json()['hitokoto'])] = Group_id
                 elif "城市编码" in Message:
@@ -225,14 +225,30 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                         _msg = clean_up(Message, ["ChatGPT", " "])
                         try:
                             _ = others.chatgpt(_msg, API["gptproxy"]) if API["gptproxy"] else others.chatgpt(_msg)
-                            Res = "以下是ChatGPT的回答:\n{}".format(_)
-                            Msg[Res] = Group_id
+                            Msg["以下是ChatGPT的回答:\n{}".format(_)] = Group_id
                         except:
                             Msg["请求失败，可能是由于网络原因"] = Group_id
                     else:
                         Msg["你没有填入Key, 无法请求"] = Group_id
                 else:
-                    Msg["干啥子"] = Group_id
+                    # 彩蛋
+                    if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
+                        _ = "难熬的日子总会过去，不信你回头看看，你都已经在不知不觉中，熬过了很多苦难，很棒吧"
+                    elif random.randint(1, 100000) % random.randint(1, 100000) == 0:
+                        _ = "无论顺境还是逆境，都希望你能喜欢和接纳当下的自己，爱这个酸甜苦辣的百味人生"
+                    elif random.randint(1, 10000) % random.randint(1, 10000) == 0:
+                        _ = "生活总是来来往往，千万别等来日方长"
+                    elif random.randint(1, 1000) % random.randint(1, 1000) == 0:
+                        _ = "路漫漫其修远兮，吾将上下而求索"
+                    elif random.randint(1, 1000) % random.randint(1, 1000) == 0:
+                        _ = "不是每一次的努力都会有收获，但是每一次的收获都需要努力"
+                    elif random.randint(1, 100) % random.randint(1, 100) == 0:
+                        _ = "人类的勇气可以跨越时间，跨越当下，跨越未来"
+                    elif random.randint(1, 100) % random.randint(1, 100) == 0:
+                        _ = "星光不问赶路人，时光不负有心人"
+                    else:
+                        _ = "干啥子"
+                    Msg[_] = Group_id
             # 集中发送消息
             Msgs = Msg.keys()
             for each in Msgs:
@@ -263,6 +279,9 @@ def Main():
             Task.AddTask(Thread(target=Group_Msg, args=(Server, request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, ToolAPI.clean_up, Server_amap, Server_others)))
         elif request.json['message_type'] == 'private':
             Task.AddTask(Thread(target=Server.Send_Private_Msg, args=(request.json['user_id'], "我暂时无法为你服务~")))
+    elif request.json["post_type"] == "meta_event":
+        if request.json["meta_event_type"] == "heartbeat":
+            Task.AddTask(Thread(target=logger.event, kwargs=dict(msg="接收到发来的心跳包，机器人在线")))
     
     # 更新数据
     Task.AddTask(Thread(target=retention, args=(Server, Dates, PATH)))
