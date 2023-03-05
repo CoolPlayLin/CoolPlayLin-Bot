@@ -229,11 +229,12 @@ class Amap:
 
 # 其他杂七杂八的API
 class OtherAPI:
-    __slots__ = ("chatgpt_token")
-    def __init__(self, chatgpt_token:str) -> None:
+    __slots__ = ("chatgpt_token", "verify")
+    def __init__(self, chatgpt_token:str, verify:bool=False) -> None:
         self.chatgpt_token = chatgpt_token
+        self.verify = verify
     def copy(self) -> requests.Response:
-        Response = requests.get("https://v1.hitokoto.cn/")
+        Response = requests.get("https://v1.hitokoto.cn/", verify=self.verify)
         return Response
     def chatgpt(self, msg:str, proxy:str=None) -> str:
         if proxy:
@@ -241,4 +242,7 @@ class OtherAPI:
         else:
             chatbot = Chatbot(self.chatgpt_token)
         Response = chatbot.ask(msg)
+        return Response
+    def search_github(self, kwargs:str) -> requests.Response:
+        Response = requests.get(url="https://api.github.com/search/repositories?q={}".format(kwargs), verify=self.verify)
         return Response

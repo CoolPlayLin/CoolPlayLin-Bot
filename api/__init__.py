@@ -11,8 +11,7 @@ if __name__ != "__main__":
     from . import cqbotapi as NormalAPI
     from . import util as ToolAPI
     from . import typings
-    import pathlib, random
-    import requests
+    import pathlib, random, requests, time
 else:
     print("本程序需要启动器进行启动，不允许直接运行")
     quit(0)
@@ -20,11 +19,11 @@ else:
 # 加载必要数据
 app = Flask(__name__)
 PATH = pathlib.Path(__file__).parent.parent / "database" / "config.json"
-Dates = ToolAPI.JsonAuto(None, "READ", PATH)
+Dates = ToolAPI.jsonauto(None, "READ", PATH)
 Task = ToolAPI.TaskManager(0)
 API_PATH = pathlib.Path(__file__).parent.parent / "database" / "API.json"
 LOG_PATH = pathlib.Path(__file__).parent.parent / "database" / "running.log"
-API = ToolAPI.JsonAuto(None, "READ", API_PATH)
+API = ToolAPI.jsonauto(None, "READ", API_PATH)
 logger = ToolAPI.Logger(LOG_PATH)
 
 # 数据纠错
@@ -45,7 +44,14 @@ Server_amap = NormalAPI.Amap(API["keys"]["amap"])
 Server_others = NormalAPI.OtherAPI(API["keys"]["chatgpt"])
 
 # 群聊消息处理
-def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Message_Id:int, Dates:dict, clean_up:ToolAPI.clean_up, amap:NormalAPI.Amap, others:NormalAPI.OtherAPI) -> bool:
+def Group_Msg(Server:NormalAPI.APIs,
+              Group_id:int, User_id:int,
+              Message:str, Message_Id:int,
+              Dates:dict,
+              clean_up:ToolAPI.clean_up,
+              amap:NormalAPI.Amap,
+              others:NormalAPI.OtherAPI,
+              API:dict) -> bool:
     if not isinstance(Server, NormalAPI.APIs):
         return False
     try:
@@ -171,15 +177,18 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                 elif Message in [each for each in ['获取一言', '一言', '文案']]:
                     Msg[(others.copy().json()['hitokoto'])] = Group_id
                 elif "城市编码" in Message:
-                    Message = clean_up(Message, ["城市编码", " "])
-                    _ = [each for each in API["CityCode"] if Message in each[0]]
-                    if len(_) > 0:
-                        _Msg = "我找到了如下城市："
-                        for each in _:
-                            _Msg += "\n{}: {}".format(each[0], each[1])
-                        Msg[_Msg] = Group_id
+                    _city = clean_up(Message, ["城市编码", " "])
+                    if len(_city) > 0:
+                        _ = [each for each in API["CityCode"] if _city in each[0]]
+                        if len(_) > 0:
+                            _Msg = "我找到了如下城市："
+                            for each in _:
+                                _Msg += "\n{}: {}".format(each[0], each[1])
+                            Msg[_Msg] = Group_id
+                        else:
+                            Msg["似乎没有这个城市哦~"] = Group_id
                     else:
-                        Msg["似乎没有这个城市哦~"] = Group_id
+                        Msg["输入的内容为空"] = Group_id
                 elif "实时天气预报" in Message:
                     if Server_amap.key:
                         city = int(ToolAPI.clean_up(Message, ["实时天气预报", "查询", " "]))
@@ -212,24 +221,60 @@ def Group_Msg(Server:NormalAPI.APIs, Group_id:int, User_id:int, Message:str, Mes
                 elif "IP定位" in Message:
                     if Server_amap.key:
                         ip = clean_up(Message, ["城市", "编码", "查询", " "])
-                        Res = amap.ip_positioning(ip).json()
-                        if int(Res['status']) == 1:
-                            _ = "{} 位于{}{}\n坐标为{}\n该城市的编码为 {}".format(ip, Res["province"], Res["city"], Res["rectangle"], Res["adcode"]) if len(Res["rectangle"]) > 0 else "没有查询到 {} 的信息".format(ip)
-                            Msg[_] = Group_id
+                        if len(ip) > 0:
+                            Res = amap.ip_positioning(ip).json()
+                            if int(Res['status']) == 1:
+                                _ = "{} 位于{}{}\n坐标为{}\n该城市的编码为 {}".format(ip, Res["province"], Res["city"], Res["rectangle"], Res["adcode"]) if len(Res["rectangle"]) > 0 else "没有查询到 {} 的信息".format(ip)
+                                Msg[_] = Group_id
+                            else:
+                                Msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = Group_id
                         else:
-                            Msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = Group_id
+                            Msg["输入的内容为空"] = Group_id
                     else:
                         Msg["你没有填入Key, 无法请求"] = Group_id
+                        
                 elif "ChatGPT" in Message:
                     if others.chatgpt_token:
                         _msg = clean_up(Message, ["ChatGPT", " "])
-                        try:
-                            _ = others.chatgpt(_msg, API["gptproxy"]) if API["gptproxy"] else others.chatgpt(_msg)
-                            Msg["以下是ChatGPT的回答:\n{}".format(_)] = Group_id
-                        except:
-                            Msg["请求失败，可能是由于网络原因"] = Group_id
+                        if len(_msg) > 0:
+                            try:
+                                _ = others.chatgpt(_msg, API["gptproxy"]) if API["gptproxy"] else others.chatgpt(_msg)
+                                Msg["以下是ChatGPT的回答:\n{}".format(_)] = Group_id
+                            except:
+                                Msg["请求失败，可能是由于网络原因"] = Group_id
+                        else:
+                            Msg["输入的内容为空"] = Group_id
                     else:
                         Msg["你没有填入Key, 无法请求"] = Group_id
+                elif "搜索Github" in Message:
+                    _data = others.search_github(clean_up(Message, [" ", ":", "搜索Github"])).json()
+                    _msg = "搜索到{}个结果，只展示前30".format(_data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
+                    for each in _data["items"]:
+                        _msg += "\n仓库名称:{}\n作者:{}\n描述:{}\n项目地址:{}\n=====".format(each["name"], each["owner"]["login"], each["description"], each["html_url"])
+                        if len(_msg) > 1024:
+                            Msg[_msg] = Group_id
+                            _msg = ""
+                    Msg[_msg] = Group_id
+                elif "拼音查询" in Message:
+                    _all = [each[0] for each in API["PiYin2"]] if "拼音查询!" in Message else [each[0] for each in API["PiYin1"]]
+                    _word = clean_up(Message, [" ", "拼音查询!", "拼音查询"])
+                    if len(_word) == 0:
+                        res = "请输入内容"
+                    elif len(_word) >= 512:
+                        res = "汉字数量超过限制"
+                    else:
+                        res = """"{}"的拼音为""".format(_word)
+                        for word in _word:
+                            _exist = word in _all
+                            for each in (API["PiYin2"] if "拼音查询!" in Message else API["PiYin1"]):
+                                if _exist:
+                                    if each[0] == word:
+                                        res += " {}".format(each[1])
+                                        break
+                                else:
+                                    res += " {}".format(word)  
+                                    break
+                    Msg[res] = Group_id
                 else:
                     # 彩蛋
                     if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
@@ -265,9 +310,9 @@ def retention(Server:NormalAPI.APIs, Dates:dict, PATH:pathlib.Path) -> bool:
         logger.event("正在将当前登录QQ的数据写入config.json")
         Dates.update({"BotQQ": Server.Get_Login_Info().json()['data']['user_id'], "@Me": "[CQ:at,qq={}]".format(Server.Get_Login_Info().json()['data']['user_id'])})
         logger.event("数据写入成功完成")
-    if Dates != ToolAPI.JsonAuto(None, "TEXT", PATH):
+    if Dates != ToolAPI.jsonauto(None, "TEXT", PATH):
         logger.event("运行数据发生更改，正在保存到本地")
-        ToolAPI.JsonAuto(Dates, "WRITE", PATH)
+        ToolAPI.jsonauto(Dates, "WRITE", PATH)
         logger.event("数据写入成功完成")
     return True
 
@@ -277,7 +322,7 @@ def Main():
     if request.json["post_type"] == "message":
         if request.json['message_type'] == 'group':
             Task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))))
-            Task.AddTask(Thread(target=Group_Msg, args=(Server, request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, ToolAPI.clean_up, Server_amap, Server_others)))
+            Task.AddTask(Thread(target=Group_Msg, args=(Server, request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, ToolAPI.clean_up, Server_amap, Server_others, API)))
         elif request.json['message_type'] == 'private':
             Task.AddTask(Thread(target=Server.Send_Private_Msg, args=(request.json['user_id'], "我暂时无法为你服务~")))
     elif request.json["post_type"] == "meta_event":

@@ -51,7 +51,7 @@ class TaskManager:
 
 FileLock = Lock()
 
-def JsonAuto(Json: dict, Action: str, PATH: Path):
+def jsonauto(Json: dict|None, Action: str, PATH: Path):
 
     with FileLock:
         if PATH.stem+PATH.suffix == "config.json":
