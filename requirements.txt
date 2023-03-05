@@ -1,3 +1,3 @@
 requests
 flask
-revChatGPT==3.0.9
+revChatGPT==3.1.0
