@@ -53,129 +53,124 @@ def Group_Msg(Server:NormalAPI.APIs,
               others:NormalAPI.OtherAPI,
               API:dict) -> bool:
     if not isinstance(Server, NormalAPI.APIs):
-        return False
+        error = TypeError("传入的参数类型错误")
+        raise error
     try:
         if Dates["@Me"] in Message:
             Message = clean_up(Message, [Dates["@Me"]])
-            Msg = {}
-            Admin:bool = (User_id in Dates["Admin"])
-            AdminGroup:bool = (Group_id in Dates["AdminGroup"])
-            AdminGroup_Admin:bool = (Admin and AdminGroup)
+            msg = {}
+            admin:bool = (User_id in Dates["Admin"])
+            admingroup:bool = (Group_id in Dates["AdminGroup"])
+            admingroup_admin:bool = (admin and admingroup)
 
             if User_id in Dates['NotAllowUser']:
-                Msg['管理员不允许你使用'] = Group_id
-            elif ToolAPI.BadWord(Message, Dates['BadWords']) and AdminGroup:
+                msg['管理员不允许你使用'] = Group_id
+            elif ToolAPI.BadWord(Message, Dates['BadWords']) and admingroup:
                     Server.Delete_Msg(message_id=Message_Id)
-                    Msg["检测到敏感内容, 已尝试撤回"] = Group_id
+                    msg["检测到敏感内容, 已尝试撤回"] = Group_id
             else:
-                if '冷静' in Message and AdminGroup_Admin:
+                if '冷静' in Message and admingroup_admin:
                     User = int(clean_up(Message, ["冷静", " "]))
                     Server.Set_Group_Ban(Group_id, User, 60)
-                    Msg["已尝试冷静此人"] = Group_id
-                elif '禁言大转盘' in Message and AdminGroup_Admin:
+                    msg["已尝试冷静此人"] = Group_id
+                elif '禁言大转盘' in Message and admingroup_admin:
                     User = int(clean_up(Message, ["禁言大转盘", " "]))
                     Min = random.randint(1, 60)
                     Server.Set_Group_Ban(Group_id, User, 60*Min)
-                    Msg["恭喜获得{}分钟".format(Min)] = Group_id
-                elif '关灯' in Message and AdminGroup_Admin:
+                    msg["恭喜获得{}分钟".format(Min)] = Group_id
+                elif '关灯' in Message and admingroup_admin:
                     Server.Set_Group_Whole_Ban(Group_id, True)
-                    Msg['全体禁言已启动'] = Group_id
-                elif '开灯' in Message and AdminGroup_Admin:
+                    msg['全体禁言已启动'] = Group_id
+                elif '开灯' in Message and admingroup_admin:
                     Server.Set_Group_Whole_Ban(Group_id, False)
-                    Msg['全体禁言已停止'] = Group_id
+                    msg['全体禁言已停止'] = Group_id
 
                 elif clean_up(Message, [" "]) in ["menu", "Menu", "MENU", "菜单", "功能", "功能列表", "help", "帮助", "你好", "Hello", "hello"]:
-                    Msg[API["Introduce"]] = Group_id
+                    msg[API["Introduce"]] = Group_id
                 elif clean_up(Message, [" "]) in ["命令列表", "Command", "CommandList", "Command List", "All Command", "command", "命令"]:
-                    Msg[API["Command"]] = Group_id
+                    msg[API["Command"]] = Group_id
                 elif "命令查找" in Message:
                     _ = [each for each in API["CommandList"].keys() if clean_up(Message, ["命令查找", " "]) in each]
                     if len(_) > 0:
                         _msg = "我找到了如下命令："
                         for each in _:
                             _msg += "\n{}\n{}".format(each, API["CommandList"][each])
-                        Msg[_msg] = Group_id
+                        msg[_msg] = Group_id
                     else:
-                        Msg["我没有找到有关 {} 的命令".format(clean_up(Message, ["命令查找", " "]))] = Group_id
-                elif "AdminGroup.show" in Message and Admin:
-                    Msg['当前所管理的群\n{}'.format(Dates['AdminGroup'])] = Group_id
-                elif "AdminGroup.append!" in Message and Admin:
+                        msg["我没有找到有关 {} 的命令".format(clean_up(Message, ["命令查找", " "]))] = Group_id
+                elif "AdminGroup.show" in Message and admin:
+                    msg['当前所管理的群\n{}'.format(Dates['AdminGroup'])] = Group_id
+                elif "AdminGroup.append!" in Message and admin:
                     if User_id in Dates['Admin']:
                         Dates['AdminGroup'].append(Group_id)
-                        Msg['保存成功\n{}'.format(Dates['AdminGroup'])] = Group_id
+                        msg['保存成功\n{}'.format(Dates['AdminGroup'])] = Group_id
                     else:
-                        Msg["你没有Admin权限"] = Group_id
-                elif "AdminGroup.append" in Message and Admin:
+                        msg["你没有Admin权限"] = Group_id
+                elif "AdminGroup.append" in Message and admin:
                     if User_id in Dates['Admin']:
                         Group = int(clean_up(Message ,["AdminGroup.append"]))
                         Dates['AdminGroup'].append(Group)
-                        Msg['保存成功\n{}'.format(Dates['AdminGroup'])] = Group_id
+                        msg['保存成功\n{}'.format(Dates['AdminGroup'])] = Group_id
                     else:
-                        Msg["你没有Admin权限"] = Group_id
-                elif "AdminGroup.del" in Message and Admin:
+                        msg["你没有Admin权限"] = Group_id
+                elif "AdminGroup.del" in Message and admin:
                     if User_id in Dates['Admin']:
                         Group = int(clean_up(Message, ["AdminGroup.del", " "]))
                         if Group in Dates['AdminGroup']:
                             Dates['AdminGroup'].remove(Group)
-                            Msg['保存成功\n{}'.format(Dates['AdminGroup'])] = Group_id
+                            msg['保存成功\n{}'.format(Dates['AdminGroup'])] = Group_id
                         else:
-                            Msg['不包含此项'] = Group_id
+                            msg['不包含此项'] = Group_id
                     else:
-                        Msg["你没有Admin权限"] = Group_id
-                elif "Refuse" in Message:
-                    if not Admin:
-                        Msg["你没有Admin权限"] = Group_id
+                        msg["你没有Admin权限"] = Group_id
+                elif "Refuse" in Message and admin:
+                    User = int(clean_up(Message, ["Refuse", " "]))
+                    if User != Dates['Root']:
+                        Dates['NotAllowUser'].append(User)
+                        msg['已将此用户添加到拒绝列表\n{}'.format(Dates['NotAllowUser'])] = Group_id
                     else:
-                        User = int(clean_up(Message, ["Refuse", " "]))
-                        if User != Dates['Root']:
-                            Dates['NotAllowUser'].append(User)
-                            Msg['已将此用户添加到拒绝列表\n{}'.format(Dates['NotAllowUser'])] = Group_id
-                        else:
-                            Msg['不允许将Root用户添加到拒绝列表'] = Group_id
-                elif "Accept" in Message:
-                    if not Admin:
-                        Msg["你没有管理权限"] = Group_id
+                        msg['不允许将Root用户添加到拒绝列表'] = Group_id
+                elif "Accept" in Message and admin:
+                    User = int(clean_up(Message, ["Accept", " "]))
+                    if User in Dates['NotAllowUser']:
+                        Dates['NotAllowUser'].remove(User)
+                        msg['已将此用户从拒绝列表移除\n{}'.format(Dates['NotAllowUser'])] = Group_id
                     else:
-                        User = int(clean_up(Message, ["Accept", " "]))
-                        if User in Dates['NotAllowUser']:
-                            Dates['NotAllowUser'].remove(User)
-                            Msg['已将此用户从拒绝列表移除\n{}'.format(Dates['NotAllowUser'])] = Group_id
-                        else:
-                            Msg['此用户不在拒绝列表中'] = Group_id
+                        msg['此用户不在拒绝列表中'] = Group_id
                 elif "Refuse.show" in Message:
-                    Msg['拒绝用户列表\n{}'.format(Dates['NotAllowUser'])] = Group_id
+                    msg['拒绝用户列表\n{}'.format(Dates['NotAllowUser'])] = Group_id
                 elif "Root.set" in Message:
                     if Dates['Root'] == None:
                         Dates['Root'] = User_id
                         Dates['Admin'].append(User_id)
-                        Msg['Root成功设置为{}'.format(str(User_id))] = Group_id
+                        msg['Root成功设置为{}'.format(str(User_id))] = Group_id
                     else:
-                        Msg['Root用户已设置，请勿重复设置'] = Group_id
+                        msg['Root用户已设置，请勿重复设置'] = Group_id
                 elif "Admin.show" in Message:
                     if User_id != Dates['Root']:
-                        Msg["你没有Root权限"] = Group_id
+                        msg["你没有Root权限"] = Group_id
                     else:
-                        Msg["当前管理员列表\n{}".format(str(Dates['Admin']))] = Group_id
+                        msg["当前管理员列表\n{}".format(str(Dates['Admin']))] = Group_id
                 elif 'Admin.append' in Message:
                     if User_id != Dates['Root']:
-                        Msg["你没有Root权限"] = Group_id
+                        msg["你没有Root权限"] = Group_id
                     else:
                         Dates['Admin'].append(int(clean_up(Message, ["Admin.append", " "])))
-                        Msg["保存成功\n{}".format(str(Dates['Admin']))] = Group_id
+                        msg["保存成功\n{}".format(str(Dates['Admin']))] = Group_id
                 elif 'Admin.del' in Message:
                     if User_id != Dates['Root']:
-                        Msg["你没有Root权限"] = Group_id
+                        msg["你没有Root权限"] = Group_id
                     else:
-                        _ = int(clean_up(Message, "Admin.del", " "))
+                        _ = int(clean_up(Message, ["Admin.del", " "]))
                         if _ in Dates['Admin']:
                             Dates['Admin'].remove(_)
-                            Msg["保存成功\n{}".format(str(Dates['Admin']))] = Group_id
+                            msg["保存成功\n{}".format(str(Dates['Admin']))] = Group_id
                         else:
-                            Msg["此用户不在Admin中"] = Group_id
+                            msg["此用户不在Admin中"] = Group_id
                 elif 'Status' in Message:
-                    Msg["状态如下:\n{}个任务正在排队\n{}个任务正在运行".format(len(Task.Perform_QueuingTask), len(Task.Perform_RunningTask))] = Group_id
-                elif Message in [each for each in ['获取一言', '一言', '文案']]:
-                    Msg[(others.copy().json()['hitokoto'])] = Group_id
+                    msg["状态如下:\n{}个任务正在排队\n{}个任务正在运行".format(len(Task.Perform_QueuingTask), len(Task.Perform_RunningTask))] = Group_id
+                elif clean_up(Message, [" "]) in ['获取一言', '一言', '文案']:
+                    msg[(others.copy().json()['hitokoto'])] = Group_id
                 elif "城市编码" in Message:
                     _city = clean_up(Message, ["城市编码", " "])
                     if len(_city) > 0:
@@ -184,11 +179,11 @@ def Group_Msg(Server:NormalAPI.APIs,
                             _Msg = "我找到了如下城市："
                             for each in _:
                                 _Msg += "\n{}: {}".format(each[0], each[1])
-                            Msg[_Msg] = Group_id
+                            msg[_Msg] = Group_id
                         else:
-                            Msg["似乎没有这个城市哦~"] = Group_id
+                            msg["似乎没有这个城市哦~"] = Group_id
                     else:
-                        Msg["输入的内容为空"] = Group_id
+                        msg["输入的内容为空"] = Group_id
                 elif "实时天气预报" in Message:
                     if Server_amap.key:
                         city = int(ToolAPI.clean_up(Message, ["实时天气预报", "查询", " "]))
@@ -196,11 +191,11 @@ def Group_Msg(Server:NormalAPI.APIs,
                         if int(Res["status"]) == 1:
                             Res = Res["lives"][0]
                             _ = "{}{} 天气预报如下:\n{}\n天气{} {}风{}级 气温{}℃ 湿度{}%".format(Res["province"], Res["city"], Res["reporttime"], Res["weather"], Res["winddirection"], Res["windpower"], Res["temperature"], Res["humidity"]) if len(Res) > 0 else "未查询到有关 {} 的任何天气情况".format(city)
-                            Msg[_] = Group_id
+                            msg[_] = Group_id
                         else:
-                            Msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = Group_id
+                            msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = Group_id
                     else:
-                        Msg["你没有填入Key, 无法请求"] = Group_id
+                        msg["你没有填入Key, 无法请求"] = Group_id
                 elif "未来天气预报" in Message:
                     if Server_amap.key:
                         city = int(clean_up(Message, ["未来天气预报", "查询", " "]))
@@ -213,11 +208,11 @@ def Group_Msg(Server:NormalAPI.APIs,
                                     _ += "\n{}\n白天{} {}风{}级 气温{}℃\n晚上{} {}风{}级 气温{}℃".format(each["date"], each["dayweather"], each["daywind"], each["daypower"], each["daytemp"], each["nightweather"], each["nightwind"], each["nightpower"], each["nighttemp"])
                             else:
                                 _ = "未查询到有关 {} 的任何天气情况".format(city)
-                            Msg[_] = Group_id
+                            msg[_] = Group_id
                         else:
-                            Msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = Group_id
+                            msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = Group_id
                     else:
-                        Msg["你没有填入Key, 无法请求"] = Group_id
+                        msg["你没有填入Key, 无法请求"] = Group_id
                 elif "IP定位" in Message:
                     if Server_amap.key:
                         ip = clean_up(Message, ["城市", "编码", "查询", " "])
@@ -225,13 +220,13 @@ def Group_Msg(Server:NormalAPI.APIs,
                             Res = amap.ip_positioning(ip).json()
                             if int(Res['status']) == 1:
                                 _ = "{} 位于{}{}\n坐标为{}\n该城市的编码为 {}".format(ip, Res["province"], Res["city"], Res["rectangle"], Res["adcode"]) if len(Res["rectangle"]) > 0 else "没有查询到 {} 的信息".format(ip)
-                                Msg[_] = Group_id
+                                msg[_] = Group_id
                             else:
-                                Msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = Group_id
+                                msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = Group_id
                         else:
-                            Msg["输入的内容为空"] = Group_id
+                            msg["输入的内容为空"] = Group_id
                     else:
-                        Msg["你没有填入Key, 无法请求"] = Group_id
+                        msg["你没有填入Key, 无法请求"] = Group_id
                         
                 elif "ChatGPT" in Message:
                     if others.chatgpt_token:
@@ -239,22 +234,22 @@ def Group_Msg(Server:NormalAPI.APIs,
                         if len(_msg) > 0:
                             try:
                                 _ = others.chatgpt(_msg, API["gptproxy"]) if API["gptproxy"] else others.chatgpt(_msg)
-                                Msg["以下是ChatGPT的回答:\n{}".format(_)] = Group_id
+                                msg["以下是ChatGPT的回答:\n{}".format(_)] = Group_id
                             except:
-                                Msg["请求失败，可能是由于网络原因"] = Group_id
+                                msg["请求失败，可能是由于网络原因"] = Group_id
                         else:
-                            Msg["输入的内容为空"] = Group_id
+                            msg["输入的内容为空"] = Group_id
                     else:
-                        Msg["你没有填入Key, 无法请求"] = Group_id
+                        msg["你没有填入Key, 无法请求"] = Group_id
                 elif "搜索Github" in Message:
                     _data = others.search_github(clean_up(Message, [" ", ":", "搜索Github"])).json()
                     _msg = "搜索到{}个结果，只展示前30".format(_data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
                     for each in _data["items"]:
                         _msg += "\n仓库名称:{}\n作者:{}\n描述:{}\n项目地址:{}\n=====".format(each["name"], each["owner"]["login"], each["description"], each["html_url"])
                         if len(_msg) > 1024:
-                            Msg[_msg] = Group_id
+                            msg[_msg] = Group_id
                             _msg = ""
-                    Msg[_msg] = Group_id
+                    msg[_msg] = Group_id
                 elif "拼音查询" in Message:
                     _all = [each[0] for each in API["PiYin2"]] if "拼音查询!" in Message else [each[0] for each in API["PiYin1"]]
                     _word = clean_up(Message, [" ", "拼音查询!", "拼音查询"])
@@ -274,7 +269,7 @@ def Group_Msg(Server:NormalAPI.APIs,
                                 else:
                                     res += " {}".format(word)  
                                     break
-                    Msg[res] = Group_id
+                    msg[res] = Group_id
                 else:
                     # 彩蛋
                     if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
@@ -293,11 +288,11 @@ def Group_Msg(Server:NormalAPI.APIs,
                         _ = "星光不问赶路人，时光不负有心人"
                     else:
                         _ = "干啥子"
-                    Msg[_] = Group_id
+                    msg[_] = Group_id
             # 集中发送消息
-            Msgs = Msg.keys()
+            Msgs = msg.keys()
             for each in Msgs:
-                Server.Send_Group_Msg(Msg[each], each)
+                Server.Send_Group_Msg(msg[each], each)
             return True
     except BaseException as e:
         Server.Send_Group_Msg(Group_id, "错误：\n{}".format(e))

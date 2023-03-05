@@ -6,7 +6,7 @@ from threading import Thread
 from time import sleep
 
 # 建立常驻线程列表
-always_task = []
+always_task:list[Thread] = []
 always_task.append(Thread(target=Task.run, name="TaskManager"))
 always_task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates['AcceptPort']), name="FlaskServer"))
 
@@ -21,9 +21,7 @@ if __name__ == '__main__':
     while True:
         for each in always_task:
             if not each.is_alive():
-                tasks = (Thread(target=Task.run, name="TaskManager"),
-                         Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates['AcceptPort']),
-                                name="FlaskServer"))
+                tasks = (Thread(target=Task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates['AcceptPort']), name="FlaskServer"))
                 Task.AddTask(Thread(target=logger.warn, kwargs=dict(msg="{}意外退出，正在尝试重新启动".format(each.name))))
                 Index = always_task.index(each)
                 always_task[Index] = tasks[Index]

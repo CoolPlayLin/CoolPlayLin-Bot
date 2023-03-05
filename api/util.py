@@ -10,15 +10,15 @@ from .typings import TaskManagerExit, APIError
 __all__ = ("TaskManager", "Logger")
 
 class TaskManager:
-    __slots__ = ("Perform_QueuingTask", "Perform_RunningTask", "Status", "TaskLimit")
+    __slots__ = ("Perform_QueuingTask", "Perform_RunningTask", "status", "TaskLimit")
     def __init__(self, TaskLimit:int) -> None:
         self.Perform_QueuingTask:list[Thread] = []
         self.Perform_RunningTask:list[Thread] = []
         self.TaskLimit = TaskLimit
-        self.Status = True
+        self.status = True
     
     def run(self) -> bool:
-        while self.Status:
+        while self.status:
             try:
                 if len(self.Perform_QueuingTask)+len(self.Perform_RunningTask) > 0:
                     for each in self.Perform_QueuingTask:
@@ -34,7 +34,7 @@ class TaskManager:
                         self.Perform_RunningTask[-1].start()
             except BaseException as e:
                 break
-        if self.Status:
+        if self.status:
             error = TaskManagerExit("任务管理器异常退出")
             raise error
         return True
@@ -52,7 +52,6 @@ class TaskManager:
 FileLock = Lock()
 
 def jsonauto(Json: dict|None, Action: str, PATH: Path):
-
     with FileLock:
         if PATH.stem+PATH.suffix == "config.json":
             DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": []}
