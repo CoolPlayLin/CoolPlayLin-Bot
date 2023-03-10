@@ -36,11 +36,10 @@ docker pull ghcr.io/coolplaylin/coolplaylin-bot:main
 
 1. 本项目部分功能基于[高德地图API](https://lbs.amap.com/)，请把`API.json`->`keys`->`amap`的值换成你的key
 2. 本项目集成[ChatGPT](https://chat.openai.com/chat)问答功能，请把`API.json`->`keys`->`chatgpt`的值换成你的token
-3. 由于中国大陆的网络环境，你可以更改`API.json`中的`gptproxy`的值启用代理，通过代理服务器访问API
-4. 本项目默认接受来自`5120`端口`/commit`路径的POST，默认发送数据到`127.0.0.1:5700`
-5. 机器人GUI管理页面与接受POST的端口一致，路径为`/`
-6. 可在`config.json`文件中修改`PostIP`和`AcceptPort`的值进行更改
-7. 如果你在使用中遇到了问题，欢迎提交`Issues`为本项目做出贡献
+3. 本项目默认接受来自`5120`端口`/commit`路径的POST，默认发送数据到`127.0.0.1:5700`
+4. 机器人GUI管理页面与接受POST的端口一致，路径为`/`
+5. 可在`config.json`文件中修改`PostIP`和`AcceptPort`的值进行更改
+6. 如果你在使用中遇到了问题，欢迎提交`issues`为本项目做出贡献
 
 ## 相关项目
 
