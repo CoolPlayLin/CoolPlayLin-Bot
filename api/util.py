@@ -5,7 +5,7 @@ from pathlib import Path
 
 from threading import Thread, Lock
 import json, time, requests, pickle
-from .typings import TaskManagerExit, APIError
+from .typing import TaskManagerExit, APIError
 
 __all__ = ("TaskManager", "Logger")
 
@@ -89,7 +89,7 @@ def jsonauto(Json: dict, Action: str, PATH: Path):
             return Res
         elif PATH.stem+PATH.suffix == "db.dat":
             if not PATH.exists():
-                urls = ("https://cdn.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://fastly.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://gitee.com/coolplaylin/CoolPlayLin-Bot/raw/main/database/API.json")
+                urls = ("https://cdn.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/db.json", "https://fastly.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/db.json", "https://gitee.com/coolplaylin/CoolPlayLin-Bot/raw/main/database/db.json")
                 source = Path(__file__).parent.parent / "database" / "db.json"
                 if source.exists():
                     with open(source, "rt", encoding="utf-8") as f:
@@ -108,7 +108,7 @@ def jsonauto(Json: dict, Action: str, PATH: Path):
                 with open(PATH, "rb") as f:
                     return pickle.loads(f.read())
 
-def BadWord(Message:str, BadWordList:list) -> bool:
+def badwords(Message:str, BadWordList:list) -> bool:
     if len([each for each in BadWordList if each in Message]) > 0:
         return True
     else:
