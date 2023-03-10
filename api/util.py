@@ -158,3 +158,6 @@ def clean_up(chore:str ,clean:list) -> str:
     for each in clean:
         chore = chore.replace(each, "")
     return chore
+
+def cut_str(chore:str, part:int) -> list:
+    return [chore[i:i+part] for i in range(0,len(chore),part)]

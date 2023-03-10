@@ -25,7 +25,7 @@ python3 main.py
 
 - DockerHub
 ```
-docker push coolplaylin/coolplaylin-bot:main
+docker pull coolplaylin/coolplaylin-bot:main
 ```
 - Github
 ```
