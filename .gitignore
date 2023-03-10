@@ -133,3 +133,4 @@ Config.json
 Test.py
 .idea
 .vscode
+*.dat

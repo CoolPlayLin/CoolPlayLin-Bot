@@ -4,7 +4,7 @@ CoolPlayLin-Bot工具类
 from pathlib import Path
 
 from threading import Thread, Lock
-import json, time
+import json, time, requests, pickle
 from .typings import TaskManagerExit, APIError
 
 __all__ = ("TaskManager", "Logger")
@@ -51,7 +51,7 @@ class TaskManager:
 
 FileLock = Lock()
 
-def jsonauto(Json: dict|None, Action: str, PATH: Path):
+def jsonauto(Json: dict, Action: str, PATH: Path):
     with FileLock:
         if PATH.stem+PATH.suffix == "config.json":
             DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": []}
@@ -75,14 +75,38 @@ def jsonauto(Json: dict|None, Action: str, PATH: Path):
             else:
                 return False
         elif PATH.stem+PATH.suffix == "API.json":
-            if PATH.exists():
-                if Action == "READ":
-                    with open(PATH, "rt", encoding="utf-8") as file:
-                        Res = json.loads(file.read())
-                    return Res
-            else:
-                return False
-
+            if not PATH.exists():
+                urls = ("https://cdn.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://fastly.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://gitee.com/coolplaylin/CoolPlayLin-Bot/raw/main/database/API.json")
+                for each in urls:
+                    try:
+                        with open(PATH, "w+", encoding="utf-8") as f:
+                            f.write(requests.get(url=each, verify=False).text)
+                            break
+                    except:
+                        continue
+            with open(PATH, "rt", encoding="utf-8") as file:
+                Res = json.loads(file.read())
+            return Res
+        elif PATH.stem+PATH.suffix == "db.dat":
+            if not PATH.exists():
+                urls = ("https://cdn.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://fastly.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://gitee.com/coolplaylin/CoolPlayLin-Bot/raw/main/database/API.json")
+                source = Path(__file__).parent.parent / "database" / "db.json"
+                if source.exists():
+                    with open(source, "rt", encoding="utf-8") as f:
+                        res = json.loads(f.read())
+                        with open(PATH, "wb+") as f:
+                            f.write(pickle.dumps(res))
+                else:
+                    for each in urls:
+                        try:
+                            with open(PATH, "wb+") as f:
+                                res = requests.get(url=each, verify=False).json()
+                                f.write(pickle.dumps(res))
+                                break
+                        except:
+                            continue
+                with open(PATH, "rb") as f:
+                    return pickle.loads(f.read())
 
 def BadWord(Message:str, BadWordList:list) -> bool:
     if len([each for each in BadWordList if each in Message]) > 0:

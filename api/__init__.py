@@ -11,7 +11,7 @@ if __name__ != "__main__":
     from . import cqbotapi as NormalAPI
     from . import util as ToolAPI
     from . import typings
-    import pathlib, random, requests, time
+    import pathlib, random
 else:
     print("本程序需要启动器进行启动，不允许直接运行")
     quit(0)
@@ -19,24 +19,14 @@ else:
 # 加载必要数据
 app = Flask(__name__)
 PATH = pathlib.Path(__file__).parent.parent / "database" / "config.json"
-Dates = ToolAPI.jsonauto(None, "READ", PATH)
-Task = ToolAPI.TaskManager(0)
 API_PATH = pathlib.Path(__file__).parent.parent / "database" / "API.json"
 LOG_PATH = pathlib.Path(__file__).parent.parent / "database" / "running.log"
+DB_PATH = pathlib.Path(__file__).parent.parent / "database" / "db.dat"
+Dates = ToolAPI.jsonauto(None, "READ", PATH)
 API = ToolAPI.jsonauto(None, "READ", API_PATH)
+DB = ToolAPI.jsonauto(None, "READ", DB_PATH)
+Task = ToolAPI.TaskManager(0)
 logger = ToolAPI.Logger(LOG_PATH)
-
-# 数据纠错
-if not API:
-    urls = ("https://cdn.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://fastly.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://gitee.com/coolplaylin/CoolPlayLin-Bot/raw/main/database/API.json")
-    for each in urls:
-        try:
-            with open(API_PATH, "w+", encoding="utf-8") as f:
-                f.write(requests.get(url=each, verify=False).text)
-                break
-        except:
-            continue
-    quit()
 
 # 实例化所需API
 Server = NormalAPI.APIs(Dates['PostIP'])
@@ -174,7 +164,7 @@ def Group_Msg(Server:NormalAPI.APIs,
                 elif "城市编码" in Message:
                     _city = clean_up(Message, ["城市编码", " "])
                     if len(_city) > 0:
-                        _ = [each for each in API["CityCode"] if _city in each[0]]
+                        _ = [each for each in DB["CityCode"] if _city in each[0]]
                         if len(_) > 0:
                             _Msg = "我找到了如下城市："
                             for each in _:
@@ -251,7 +241,7 @@ def Group_Msg(Server:NormalAPI.APIs,
                             _msg = ""
                     msg[_msg] = Group_id
                 elif "拼音查询" in Message:
-                    _all = [each[0] for each in API["PiYin2"]] if "拼音查询!" in Message else [each[0] for each in API["PiYin1"]]
+                    _all = [each[0] for each in DB["PiYin2"]] if "拼音查询!" in Message else [each[0] for each in DB["PiYin1"]]
                     _word = clean_up(Message, [" ", "拼音查询!", "拼音查询"])
                     if len(_word) == 0:
                         res = "请输入内容"
@@ -261,7 +251,7 @@ def Group_Msg(Server:NormalAPI.APIs,
                         res = """"{}"的拼音为""".format(_word)
                         for word in _word:
                             _exist = word in _all
-                            for each in (API["PiYin2"] if "拼音查询!" in Message else API["PiYin1"]):
+                            for each in (DB["PiYin2"] if "拼音查询!" in Message else DB["PiYin1"]):
                                 if _exist:
                                     if each[0] == word:
                                         res += " {}".format(each[1])
