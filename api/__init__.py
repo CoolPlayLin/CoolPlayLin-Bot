@@ -12,7 +12,7 @@ if __name__ != "__main__":
     from flask import Flask, render_template, request
     from threading import Thread
     from . import api, util
-    import pathlib, random
+    import pathlib, random, time
 else:
     print("本程序需要启动器进行启动，不允许直接运行")
     quit(0)
@@ -29,27 +29,23 @@ Task = util.TaskManager(0)
 logger = util.Logger(LOG_PATH)
 
 # 实例化所需API
-Server = api.APIs(Dates['PostIP'])
-Server_amap = api.Amap(API["keys"]["amap"])
-Server_others = api.OtherAPI(API["keys"]["chatgpt"])
+server = api.APIs(Dates['PostIP'])
+amap = api.Amap(API["keys"]["amap"])
+others = api.OtherAPI(API["keys"]["chatgpt"])
 
 # 群聊消息处理
-def Group_Msg(Server:api.APIs,
-              Group_id:int,
+def group_msg(Group_id:int,
               User_id:int,
               Message:str,
               Message_Id:int,
               Dates:dict,
-              amap:api.Amap,
-              others:api.OtherAPI,
-              API:dict) -> bool:
-    if not isinstance(Server, api.APIs):
-        error = TypeError("传入的参数类型错误")
-        raise error
+              API:dict,
+              DB:dict,
+              safe_sleep:float=0.5) -> bool:
     try:
         if Dates["@Me"] in Message:
-            Message = util.clean_up(Message, [Dates["@Me"]]).lstrip()
             msg = {}
+            Message = util.clean_up(Message, [Dates["@Me"]]).lstrip()
             admin:bool = (User_id in Dates["Admin"])
             admingroup:bool = (Group_id in Dates["AdminGroup"])
             admingroup_admin:bool = (admin and admingroup)
@@ -57,23 +53,23 @@ def Group_Msg(Server:api.APIs,
             if User_id in Dates['NotAllowUser']:
                 msg['管理员不允许你使用'] = Group_id
             elif util.badwords(Message, Dates['BadWords']) and admingroup:
-                    Server.delete_msg(message_id=Message_Id)
+                    server.delete_msg(message_id=Message_Id)
                     msg["检测到敏感内容, 已尝试撤回"] = Group_id
             else:
                 if '冷静' in Message and admingroup_admin:
                     User = int(util.clean_up(Message, ["冷静", " "]))
-                    Server.set_group_ban(Group_id, User, 60)
+                    server.set_group_ban(Group_id, User, 60)
                     msg["已尝试冷静此人"] = Group_id
                 elif '禁言大转盘' in Message and admingroup_admin:
                     User = int(util.clean_up(Message, ["禁言大转盘", " "]))
                     Min = random.randint(1, 60)
-                    Server.set_group_ban(Group_id, User, 60*Min)
+                    server.set_group_ban(Group_id, User, 60*Min)
                     msg["恭喜获得{}分钟".format(Min)] = Group_id
                 elif '关灯' in Message and admingroup_admin:
-                    Server.set_group_whole_ban(Group_id, True)
+                    server.set_group_whole_ban(Group_id, True)
                     msg['全体禁言已启动'] = Group_id
                 elif '开灯' in Message and admingroup_admin:
-                    Server.set_group_whole_ban(Group_id, False)
+                    server.set_group_whole_ban(Group_id, False)
                     msg['全体禁言已停止'] = Group_id
 
                 elif util.clean_up(Message, [" "]) in ["menu", "Menu", "MENU", "菜单", "功能", "功能列表", "help", "帮助", "你好", "Hello", "hello"]:
@@ -176,7 +172,7 @@ def Group_Msg(Server:api.APIs,
                     else:
                         msg["输入的内容为空"] = Group_id
                 elif "实时天气预报" in Message:
-                    if Server_amap.key:
+                    if amap.key:
                         city = int(util.util.clean_up(Message, ["实时天气预报", "查询", " "]))
                         Res = amap.forecasters(city, "base").json()
                         if int(Res["status"]) == 1:
@@ -188,7 +184,7 @@ def Group_Msg(Server:api.APIs,
                     else:
                         msg["你没有填入Key, 无法请求"] = Group_id
                 elif "未来天气预报" in Message:
-                    if Server_amap.key:
+                    if amap.key:
                         city = int(util.clean_up(Message, ["未来天气预报", "查询", " "]))
                         Res = amap.forecasters(city, "all").json()
                         if int(Res["status"]) == 1:
@@ -205,7 +201,7 @@ def Group_Msg(Server:api.APIs,
                     else:
                         msg["你没有填入Key, 无法请求"] = Group_id
                 elif "IP定位" in Message:
-                    if Server_amap.key:
+                    if amap.key:
                         ip = util.clean_up(Message, ["城市", "编码", "查询", " "])
                         if len(ip) > 0:
                             Res = amap.ip_positioning(ip).json()
@@ -241,10 +237,10 @@ def Group_Msg(Server:api.APIs,
                     _msg = "搜索到{}个结果，只展示前30".format(_data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
                     for each in _data["items"]:
                         _msg += "\n仓库名称:{}\n作者:{}\n描述:{}\n项目地址:{}\n=====".format(each["name"], each["owner"]["login"], each["description"], each["html_url"])
-                        if len(_msg) > 1024:
-                            msg[_msg] = Group_id
-                            _msg = ""
-                    msg[_msg] = Group_id
+                    if len(_msg) <= 512:
+                        msg[_msg] = Group_id
+                    else:
+                        msg.update({each:Group_id for each in util.cut_str(_msg, 512)})
                 elif "拼音查询" in Message:
                     _all = [each[0] for each in DB["PiYin2"]] if "拼音查询!" in Message else [each[0] for each in DB["PiYin1"]]
                     _word = util.clean_up(Message, [" ", "拼音查询!", "拼音查询"])
@@ -287,18 +283,19 @@ def Group_Msg(Server:api.APIs,
             # 集中发送消息
             Msgs = msg.keys()
             for each in Msgs:
-                Server.send_group_msg(msg[each], each)
+                server.send_group_msg(msg[each], each)
+                time.sleep(safe_sleep)
             return True
     except BaseException as e:
-        Server.send_group_msg(Group_id, "错误：\n{}".format(e))
+        server.send_group_msg(Group_id, "错误：\n{}".format(e))
         logger.error(e)
         raise
 
 # 数据保存
-def retention(Server:api.APIs, Dates:dict, PATH:pathlib.Path) -> bool:
+def retention(server:api.APIs, Dates:dict, PATH:pathlib.Path) -> bool:
     if Dates["BotQQ"] is None:
         logger.event("正在将当前登录QQ的数据写入config.json")
-        Dates.update({"BotQQ": Server.get_login_info().json()['data']['user_id'], "@Me": "[CQ:at,qq={}]".format(Server.get_login_info().json()['data']['user_id'])})
+        Dates.update({"BotQQ": server.get_login_info().json()['data']['user_id'], "@Me": "[CQ:at,qq={}]".format(server.get_login_info().json()['data']['user_id'])})
         logger.event("数据写入成功完成")
     if Dates != util.jsonauto(None, "TEXT", PATH):
         logger.event("运行数据发生更改，正在保存到本地")
@@ -314,15 +311,15 @@ def accept():
     if request.json["post_type"] == "message":
         if request.json['message_type'] == 'group':
             Task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))))
-            Task.AddTask(Thread(target=Group_Msg, args=(Server, request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, Server_amap, Server_others, API)))
+            Task.AddTask(Thread(target=group_msg, args=(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)))
         elif request.json['message_type'] == 'private':
-            Task.AddTask(Thread(target=Server.send_private_msg, args=(request.json['user_id'], "我暂时无法为你服务~")))
+            Task.AddTask(Thread(target=server.send_private_msg, args=(request.json['user_id'], "我暂时无法为你服务~")))
     elif request.json["post_type"] == "meta_event":
         if request.json["meta_event_type"] == "heartbeat":
             Task.AddTask(Thread(target=logger.event, kwargs=dict(msg="接收到心跳包，机器人在线")))
     
     # 更新数据
-    Task.AddTask(Thread(target=retention, args=(Server, Dates, PATH)))
+    Task.AddTask(Thread(target=retention, args=(server, Dates, PATH)))
     return 'ok'
 
 @app.route("/", methods=['GET', "POST"]) # Web页面路由

@@ -1,9 +1,12 @@
 """
 CoolPlayLin-Bot启动器
 """
+
+print("正在初始化内核组件，请稍等")
 from api import Task, app, logger, Dates
 from threading import Thread
 from time import sleep
+print("内核主机初始化成功完成")
 
 # 建立常驻线程列表
 always_task:list[Thread] = []

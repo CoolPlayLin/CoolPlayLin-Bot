@@ -5,7 +5,7 @@ from pathlib import Path
 
 from threading import Thread, Lock
 import json, time, requests, pickle
-from .typing import TaskManagerExit, APIError
+from .typing import TaskManagerExit, BotError
 
 __all__ = ("TaskManager", "Logger")
 
@@ -105,8 +105,11 @@ def jsonauto(Json: dict, Action: str, PATH: Path):
                                 break
                         except:
                             continue
-                with open(PATH, "rb") as f:
-                    return pickle.loads(f.read())
+            with open(PATH, "rb") as f:
+                return pickle.loads(f.read())
+        else:
+            error = BotError("不支持此文件的读写")
+            raise error
 
 def badwords(Message:str, BadWordList:list) -> bool:
     if len([each for each in BadWordList if each in Message]) > 0:
