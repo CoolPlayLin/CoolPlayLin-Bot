@@ -4,6 +4,7 @@ Go-cqhttp的API库
 
 import requests
 from revChatGPT.V3 import Chatbot
+import openai
 
 __all__ = ('APIs', "Amap")
 
@@ -241,6 +242,9 @@ class OtherAPI:
     def chatgpt(self, msg:str, proxy:str=None) -> str:
         chatbot = Chatbot(self.chatgpt_token, proxy=proxy) if proxy else Chatbot(self.chatgpt_token)
         Response = chatbot.ask(msg)
+        return Response
+    def image_generation(self, description:str) -> dict:
+        Response = openai.Image.create(self.chatgpt_token, prompt=description, n=1, size="1024x1024")
         return Response
     def search_github(self, kwargs:str) -> requests.Response:
         Response = requests.get(url="https://api.github.com/search/repositories?q={}".format(kwargs), verify=self.verify)

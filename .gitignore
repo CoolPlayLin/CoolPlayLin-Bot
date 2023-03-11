@@ -134,3 +134,4 @@ Test.py
 .idea
 .vscode
 *.dat
+cache

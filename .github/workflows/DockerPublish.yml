@@ -10,7 +10,7 @@ env:
   IMAGE_NAME: coolplaylin-bot
 
 jobs:
-  pubulish:
+  publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
