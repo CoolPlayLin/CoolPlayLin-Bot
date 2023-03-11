@@ -176,7 +176,7 @@ def group_msg(group_id:int,
                         msg["输入的内容为空"] = group_id
                 elif "实时天气预报" in message:
                     if amap.key:
-                        city = int(util.util.clean_up(message, ["实时天气预报", "查询", " "]))
+                        city = int(util.clean_up(message, ["实时天气预报", "查询", " "]))
                         Res = amap.forecasters(city, "base").json()
                         if int(Res["status"]) == 1:
                             Res = Res["lives"][0]
@@ -235,15 +235,45 @@ def group_msg(group_id:int,
                             msg["输入的内容为空"] = group_id
                     else:
                         msg["你没有填入Key, 无法请求"] = group_id
-                elif "搜索Github" in message:
-                    _data = others.search_github(util.clean_up(message, [" ", ":", "搜索Github"])).json()
-                    _msg = "搜索到{}个结果，只展示前30".format(_data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
-                    for each in _data["items"]:
-                        _msg += "\n仓库名称:{}\n作者:{}\n描述:{}\n项目地址:{}\n=====".format(each["name"], each["owner"]["login"], each["description"], each["html_url"])
-                    if len(_msg) <= 512:
-                        msg[_msg] = group_id
+                elif "搜索Github_repo" in message:
+                    _data = others.search_github_repo(util.clean_up(message, [" ", ":", "搜索Github_repo"])).json()
+                    if "message" in _data:
+                        msg["请求失败，原因: {}".format(_data["message"])] = group_id
                     else:
-                        msg.update({each:group_id for each in util.cut_str(_msg, 512)})
+                        _msg = "搜索到{}个结果，只展示前30位".format(_data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
+                        for each in _data["items"]:
+                            _msg += "\n=====\n仓库名称:{}\n作者:{}\n描述:{}\n项目地址:{}".format(each["name"], each["owner"]["login"], each["description"], each["html_url"])
+                        if len(_msg) <= 512:
+                            msg[_msg] = group_id
+                        else:
+                            msg.update({each:group_id for each in util.cut_str(_msg, 512)})
+                elif "搜索Github_user" in message:
+                    _data = others.search_github_user(util.clean_up(message, [" ", ":", "搜索Github_user"])).json()
+                    if "message" in _data:
+                        msg["请求失败，原因: {}".format(_data["message"])] = group_id
+                    else:
+                        _msg = "搜索到{}个结果，只展示前30位".format(_data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
+                        for each in _data["items"]:
+                            _msg += "\n=====\n用户名:{}\n主页:{}".format(each["login"], each["html_url"])
+                        if len(_msg) <= 512:
+                            msg[_msg] = group_id
+                        else:
+                            msg.update({each:group_id for each in util.cut_str(_msg, 512)})
+                elif "查看个人Github" in message:
+                    _data = others.lookup_github_user(util.clean_up(message, [" ", ":", "查看个人Github"])).json()
+                    if "message" in _data:
+                        msg["请求失败，原因: {}".format(_data["message"])] = group_id
+                    else:
+                        if len(_data) > 0:
+                            _msg = "找到了关于{}的{}个仓库信息".format(util.clean_up(message, [" ", ":", "查看个人Github"]), len(_data))
+                            for each in _data:
+                                _msg += "\n=====\n仓库名称:{}\n描述:{}\n项目地址:{}".format(each["name"], each["description"], each["html_url"])
+                            if len(_msg) <= 512:
+                                msg[_msg] = group_id
+                            else:
+                                msg.update({each:group_id for each in util.cut_str(_msg, 512)})
+                        else:
+                            _msg["{}没有创建任何仓库".format(util.clean_up(message, [" ", ":", "查看个人Github"]))]
                 elif "拼音查询" in message:
                     _all = [each[0] for each in DB["PiYin2"]] if "拼音查询!" in message else [each[0] for each in DB["PiYin1"]]
                     _word = util.clean_up(message, [" ", "拼音查询!", "拼音查询"])
@@ -281,6 +311,14 @@ def group_msg(group_id:int,
                             msg["输入的内容为空"] = group_id
                     else:
                         msg["密钥为空，无法请求"] = group_id
+                elif "随机图片" in message:
+                    _img_path = pathlib.Path(__file__).parent / "cache" / "random{}.jpg".format(random.randint(1, 100000000))
+                    while _img_path.exists():
+                        _img_path = pathlib.Path(__file__).parent / "cache" / "random{}.jpg".format(random.randint(1, 100000000))
+                    with open(_img_path, "wb+") as f:
+                        res = others.random_image()
+                        f.write(res.content)
+                    server.upload_group_file(group_id, _img_path, _img_path.stem+_img_path.suffix)
                 else:
                     # 彩蛋
                     if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
@@ -366,6 +404,14 @@ def private_msg(user_id:int,
             #             msg["输入的内容为空"] = user_id
             #     else:
             #         msg["密钥为空，无法请求"] = user_id
+            elif "随机图片" in message:
+                _img_path = pathlib.Path(__file__).parent / "cache" / "random{}.jpg".format(random.randint(1, 100000000))
+                while _img_path.exists():
+                    _img_path = pathlib.Path(__file__).parent / "cache" / "random{}.jpg".format(random.randint(1, 100000000))
+                with open(_img_path, "wb+") as f:
+                    res = others.random_image()
+                    f.write(res.content)
+                msg["[CQ:image,file=file://{},type=show,id=40004]".format(_img_path.as_posix().replace("/", "//"))] = user_id
             else:
                 # 彩蛋
                 if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:

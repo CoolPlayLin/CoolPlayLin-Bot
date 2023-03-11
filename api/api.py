@@ -258,6 +258,15 @@ class OtherAPI:
     def image_variation(self, img_path:pathlib.Path) -> dict:
         Response = openai.Image.create_variation(open(img_path, "rb"), self.chatgpt_token, n=1, size="1024x1024")
         return Response
-    def search_github(self, kwargs:str) -> requests.Response:
-        Response = requests.get(url="https://api.github.com/search/repositories?q={}".format(kwargs), verify=self.verify)
+    def search_github_repo(self, args:str) -> requests.Response:
+        Response = requests.get(url="https://api.github.com/search/repositories?q={}".format(args), verify=self.verify)
+        return Response
+    def search_github_user(self, args:str) -> requests.Response:
+        Response = requests.get(url="https://api.github.com/search/users?q={}".format(args), verify=self.verify)
+        return Response
+    def lookup_github_user(self, user:str) -> requests.Response:
+        Response = requests.get("https://api.github.com/users/{}/repos".format(user), verify=self.verify)
+        return Response
+    def random_image(self) -> requests.Response:
+        Response = requests.get("https://api.ixiaowai.cn/gqapi/gqapi.php", verify=self.verify)
         return Response
