@@ -54,7 +54,7 @@ FileLock = Lock()
 def jsonauto(Json: dict, Action: str, PATH: Path):
     with FileLock:
         if PATH.stem+PATH.suffix == "config.json":
-            DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "@Me": None, "AdminGroup": []}
+            DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "@Me": None, "AdminGroup": [], "Server":{"AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "AccessKey": None}}
             if not PATH.exists():
                 with open(PATH, "w+", encoding="utf-8") as f:
                     f.write(json.dumps(DefaultJSON))

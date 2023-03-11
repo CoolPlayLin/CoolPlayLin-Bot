@@ -10,7 +10,7 @@ __all__ = ('APIs', "Amap")
 # Go-cqhttp的API
 class APIs:
     __slots__ = ('Server', 'Verify', 'headers')
-    def __init__(self, Server:str, head:str="http://", Verify:bool=False, AccessKey:str=False) -> None:
+    def __init__(self, Server:str, head:str="http://", Verify:bool=False, AccessKey:str=None) -> None:
         self.Server = head+Server
         self.Verify = Verify
         self.headers = {

@@ -29,7 +29,7 @@ Task = util.TaskManager(0)
 logger = util.Logger(LOG_PATH)
 
 # 实例化所需API
-server = api.APIs(Dates['PostIP'])
+server = api.APIs(Dates["Server"]['PostIP'], AccessKey=Dates["Server"]["AccessKey"])
 amap = api.Amap(API["keys"]["amap"])
 others = api.OtherAPI(API["keys"]["chatgpt"])
 

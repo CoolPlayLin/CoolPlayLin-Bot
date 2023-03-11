@@ -11,7 +11,7 @@ print("内核主机初始化成功完成")
 # 建立常驻线程列表
 always_task:list[Thread] = []
 always_task.append(Thread(target=Task.run, name="TaskManager"))
-always_task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates['AcceptPort']), name="FlaskServer"))
+always_task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"))
 
 if __name__ == '__main__':
     # 启动所有任务
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     while True:
         for each in always_task:
             if not each.is_alive():
-                tasks = (Thread(target=Task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates['AcceptPort']), name="FlaskServer"))
+                tasks = (Thread(target=Task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"))
                 Task.AddTask(Thread(target=logger.warn, kwargs=dict(msg="{}意外退出，正在尝试重新启动".format(each.name))))
                 Index = always_task.index(each)
                 always_task[Index] = tasks[Index]
