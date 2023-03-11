@@ -1,7 +1,5 @@
 name: Build and Publish Docker Image
 
-# refer to https://github.com/actions/starter-workflows/blob/main/ci/docker-publish.yml 
-
 on:
   release:
     types: [published]
@@ -32,6 +30,14 @@ jobs:
           registry: ${{ matrix.REGISTRY }}
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Log into registry - Github
+        if: matrix.REGISTRY == 'ghcr.io'
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ matrix.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
   
       - name: Extract Docker metadata - DockerHub
         if: matrix.REGISTRY == 'docker.io'
@@ -39,6 +45,13 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ matrix.REGISTRY }}/${{ secrets.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}
+      
+      - name: Extract Docker metadata - Github
+        if: matrix.REGISTRY == 'ghcr.io'
+        id: meta-github
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ matrix.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image - DockerHub
         if: matrix.REGISTRY == 'docker.io'
@@ -48,21 +61,6 @@ jobs:
           push: true
           tags: ${{ steps.meta-dockerhub.outputs.tags }}
           labels: ${{ steps.meta-dockerhub.outputs.labels }}
-
-      - name: Log into registry - Github
-        if: matrix.REGISTRY == 'ghcr.io'
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ matrix.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract Docker metadata - Github
-        if: matrix.REGISTRY == 'ghcr.io'
-        id: meta-github
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ matrix.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image - Github
         if: matrix.REGISTRY == 'ghcr.io'

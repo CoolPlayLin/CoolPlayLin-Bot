@@ -25,7 +25,7 @@ DB_PATH = pathlib.Path(__file__).parent.parent / "database" / "db.dat"
 Dates = util.jsonauto(None, "READ", PATH)
 API = util.jsonauto(None, "READ", API_PATH)
 DB = util.jsonauto(None, "READ", DB_PATH)
-Task = util.TaskManager(0)
+task = util.TaskManager(0)
 logger = util.Logger(LOG_PATH)
 
 # 实例化所需API
@@ -155,7 +155,7 @@ def group_msg(Group_id:int,
                         else:
                             msg["此用户不在Admin中"] = Group_id
                 elif 'Status' in Message:
-                    msg["状态如下:\n{}个任务正在排队\n{}个任务正在运行".format(len(Task.Perform_QueuingTask), len(Task.Perform_RunningTask))] = Group_id
+                    msg["状态如下:\n{}个任务正在排队\n{}个任务正在运行".format(len(task.Perform_QueuingTask), len(task.Perform_RunningTask))] = Group_id
                 elif util.clean_up(Message, [" "]) in ['获取一言', '一言', '文案']:
                     msg[(others.copy().json()['hitokoto'])] = Group_id
                 elif "城市编码" in Message:
@@ -310,16 +310,16 @@ app = Flask(__name__)
 def accept():
     if request.json["post_type"] == "message":
         if request.json['message_type'] == 'group':
-            Task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))))
-            Task.AddTask(Thread(target=group_msg, args=(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)))
+            task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))))
+            task.AddTask(Thread(target=group_msg, args=(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)))
         elif request.json['message_type'] == 'private':
-            Task.AddTask(Thread(target=server.send_private_msg, args=(request.json['user_id'], "我暂时无法为你服务~")))
+            task.AddTask(Thread(target=server.send_private_msg, args=(request.json['user_id'], "我暂时无法为你服务~")))
     elif request.json["post_type"] == "meta_event":
         if request.json["meta_event_type"] == "heartbeat":
-            Task.AddTask(Thread(target=logger.event, kwargs=dict(msg="接收到心跳包，机器人在线")))
+            task.AddTask(Thread(target=logger.event, kwargs=dict(msg="接收到心跳包，机器人在线")))
     
     # 更新数据
-    Task.AddTask(Thread(target=retention, args=(server, Dates, PATH)))
+    task.AddTask(Thread(target=retention, args=(server, Dates, PATH)))
     return 'ok'
 
 @app.route("/", methods=['GET', "POST"]) # Web页面路由

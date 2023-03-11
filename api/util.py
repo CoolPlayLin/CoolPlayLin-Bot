@@ -1,8 +1,8 @@
 """
 CoolPlayLin-Bot工具类
 """
-from pathlib import Path
 
+from pathlib import Path
 from threading import Thread, Lock
 import json, time, requests, pickle
 from .typing import TaskManagerExit, BotError
@@ -14,7 +14,7 @@ class TaskManager:
     def __init__(self, TaskLimit:int) -> None:
         self.Perform_QueuingTask:list[Thread] = []
         self.Perform_RunningTask:list[Thread] = []
-        self.TaskLimit = TaskLimit
+        self.TaskLimit = int(TaskLimit)
         self.status = True
     
     def run(self) -> bool:
@@ -48,10 +48,11 @@ class TaskManager:
     def __delattr__(self, __name: str) -> None:
         error = TypeError("不允许删除任何内部数据")
         raise error
-
-FileLock = Lock()
+    def stop(self):
+        self.status = False
 
 def jsonauto(Json: dict, Action: str, PATH: Path):
+    FileLock = Lock()
     with FileLock:
         if PATH.stem+PATH.suffix == "config.json":
             DefaultJSON = {"Root": None, "Admin": [], "BotQQ": None,"NotAllowUser":[], "BadWords": [], "@Me": None, "AdminGroup": [], "Server":{"AcceptPort": 5120, "PostIP": "127.0.0.1:5700", "AccessKey": None}}
@@ -126,7 +127,7 @@ class Logger:
             raise TypeError
         elif not PATH.exists():
             with open(PATH, "w+", encoding="utf-8") as f:
-                f.close
+                f.close()
         else:
             with open(PATH, "a", encoding="utf-8") as f:
                 f.write("\n=====分界线=====\n\n")
