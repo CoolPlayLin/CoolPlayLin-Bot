@@ -10,7 +10,7 @@ if __name__ != "__main__":
     from flask import Flask, render_template, request
     from threading import Thread
     from . import api, util, typing
-    import pathlib, random, time, os
+    import pathlib, random, time, os, requests
 else:
     print("本程序需要启动器进行启动，不允许直接运行")
     quit(0)
@@ -264,6 +264,23 @@ def group_msg(group_id:int,
                                     res += " {}".format(word)  
                                     break
                     msg[res] = group_id
+                elif "图片生成" in message:
+                    if others.chatgpt_token:
+                        _msg = util.clean_up(message, [" ", "图片生成"])
+                        if len(_msg) > 0:
+                            _url = others.image_generation(_msg)['data'][0]['url']
+                            _img_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+                            while _img_path.exists():
+                                _img_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+                            with open(_img_path, "wb") as f:
+                                res = requests.get(_url)
+                                f.write(res.content)
+                            server.upload_group_file(group_id , _img_path, _img_path.stem+_img_path.suffix)
+                            msg["生成成功完成"] = group_id
+                        else:
+                            msg["输入的内容为空"] = group_id
+                    else:
+                        msg["密钥为空，无法请求"] = group_id
                 else:
                     # 彩蛋
                     if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
@@ -314,7 +331,6 @@ def private_msg(user_id:int,
                 if others.chatgpt_token:
                     _msg = util.clean_up(message, [" ", "图片生成"])
                     if len(_msg) > 0:
-                        import requests
                         _url = others.image_generation(_msg)['data'][0]['url']
                         _img_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
                         while _img_path.exists():
@@ -327,6 +343,29 @@ def private_msg(user_id:int,
                         msg["输入的内容为空"] = user_id
                 else:
                     msg["密钥为空，无法请求"] = user_id
+            # elif "图片修改" in message:
+            #     if others.chatgpt_token:
+            #         _msg = util.clean_up(message, [" ", "图片修改"])
+            #         if len(_msg) > 0:
+            #             _old_url = _msg[_msg.find("url=")+4:_msg.find(";")]
+            #             _old_path = pathlib.Path(__file__).parent / "cache" / "user{}.png".format(random.randint(1, 100000000))
+            #             while _old_path.exists():
+            #                 _old_path = pathlib.Path(__file__).parent / "cache" / "user{}.png".format(random.randint(1, 100000000))
+            #             with open(_old_path, "wb") as f:
+            #                 res = requests.get(_old_url)
+            #                 f.write(res.content)
+            #             _new_url = others.image_variation(_old_path)['data'][0]['url']
+            #             _new_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+            #             while _new_path.exists():
+            #                 _new_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+            #             with open(_new_path, "wb") as f:
+            #                 res = requests.get(_new_url)
+            #                 f.write(res.content)
+            #             msg["[CQ:image,file=file://{},type=show,id=40004]".format(_new_path.as_posix().replace("/", "//"))] = user_id
+            #         else:
+            #             msg["输入的内容为空"] = user_id
+            #     else:
+            #         msg["密钥为空，无法请求"] = user_id
             else:
                 # 彩蛋
                 if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
@@ -378,6 +417,7 @@ def accept():
             task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))))
             task.AddTask(Thread(target=group_msg, args=(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)))
         elif request.json['message_type'] == 'private':
+            print(request.json['raw_message'])
             task.AddTask(Thread(target=private_msg, args=(request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)))
     elif request.json["post_type"] == "meta_event":
         if request.json["meta_event_type"] == "heartbeat":

@@ -4,7 +4,7 @@ Go-cqhttp的API库
 
 import requests
 from revChatGPT.V3 import Chatbot
-import openai
+import openai, pathlib
 
 __all__ = ('APIs', "Amap")
 
@@ -217,6 +217,15 @@ class APIs:
         }
         Response = requests.post("{}/delete_msg".format(self.Server), data=Date, headers=self.headers)
         return Response
+    def upload_group_file(self, group_id:int, file:str, name:str, folder:str=None) -> requests.Response:
+        Date = {
+            "group_id": group_id,
+            "file": file,
+            "name": name
+        }
+        if folder:
+            Date["folder"] = folder
+        Response = requests.post("{}/upload_group_file".format(self.Server), data=Date, headers=self.headers)
 
 # 高德地图API
 class Amap:
@@ -245,6 +254,9 @@ class OtherAPI:
         return Response
     def image_generation(self, description:str) -> dict:
         Response = openai.Image.create(self.chatgpt_token, prompt=description, n=1, size="1024x1024")
+        return Response
+    def image_variation(self, img_path:pathlib.Path) -> dict:
+        Response = openai.Image.create_variation(open(img_path, "rb"), self.chatgpt_token, n=1, size="1024x1024")
         return Response
     def search_github(self, kwargs:str) -> requests.Response:
         Response = requests.get(url="https://api.github.com/search/repositories?q={}".format(kwargs), verify=self.verify)
