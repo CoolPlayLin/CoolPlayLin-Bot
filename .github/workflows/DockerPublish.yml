@@ -8,107 +8,67 @@ on:
   push:
     branches: ["main"]
 
-
 env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: docker.io
-  REGISTRY-gh: ghcr.io
-  # <repo>
   IMAGE_NAME: coolplaylin-bot
 
-
 jobs:
-  build-dockerhub:
-
+  pubulish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
+    strategy:
+      fail-fast: false
+      matrix:
+        REGISTRY: [docker.io, ghcr.io]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
+      - name: Log into registry - DockerHub
+        if: matrix.REGISTRY == 'docker.io'
         uses: docker/login-action@v2
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ matrix.REGISTRY }}
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
+  
+      - name: Extract Docker metadata - DockerHub
+        if: matrix.REGISTRY == 'docker.io'
+        id: meta-dockerhub
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ secrets.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}
+          images: ${{ matrix.REGISTRY }}/${{ secrets.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
-      - name: Build and push Docker image - release
-        if: github.event_name == 'release'
+      - name: Build and push Docker image - DockerHub
+        if: matrix.REGISTRY == 'docker.io'
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-      - name: Build and push Docker image - push
-        if: github.event_name != 'release'
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-      
-  build-github:
+          push: true
+          tags: ${{ steps.meta-dockerhub.outputs.tags }}
+          labels: ${{ steps.meta-dockerhub.outputs.labels }}
 
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY-gh }}
+      - name: Log into registry - Github
+        if: matrix.REGISTRY == 'ghcr.io'
         uses: docker/login-action@v2
         with:
-          registry: ${{ env.REGISTRY-gh }}
+          registry: ${{ matrix.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
+      - name: Extract Docker metadata - Github
+        if: matrix.REGISTRY == 'ghcr.io'
+        id: meta-github
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY-gh }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
+          images: ${{ matrix.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
-      - name: Build and push Docker image - release
-        if: github.event_name == 'release'
+      - name: Build and push Docker image - Github
+        if: matrix.REGISTRY == 'ghcr.io'
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-      - name: Build and push Docker image - push
-        if: github.event_name != 'release'
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.meta-github.outputs.tags }}
+          labels: ${{ steps.meta-github.outputs.labels }}

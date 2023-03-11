@@ -16,34 +16,31 @@ jobs:
     name: Docker Build Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag coolplaylin-bot
 
   analyze:
-    name: Analyze
+    name: Code Analysis Scanning
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
       security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: ['python']
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
-        languages: ${{ matrix.language }}
-    - name: AutoBuild - ${{ matrix.language }}
+        languages: python
+    - name: AutoBuild - python
       uses: github/codeql-action/autobuild@v2
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
       with:
-        category: "/language:${{matrix.language}}"
+        category: "/language:python"
   test:
     name: Python Test and Lint
     runs-on: ubuntu-latest
