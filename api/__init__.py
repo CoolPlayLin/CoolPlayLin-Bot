@@ -464,7 +464,6 @@ def accept():
             task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))), 1)
             task.AddTask(Thread(target=group_msg, args=(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)), 1)
         elif request.json['message_type'] == 'private':
-            print(request.json['raw_message'])
             task.AddTask(Thread(target=private_msg, args=(request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)), 2)
     elif request.json["post_type"] == "meta_event":
         if request.json["meta_event_type"] == "heartbeat":

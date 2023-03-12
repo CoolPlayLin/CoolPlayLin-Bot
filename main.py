@@ -15,18 +15,25 @@ always_task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates
 
 if __name__ == '__main__':
     # 启动所有任务
-    for each in always_task:
-        task.AddTask(Thread(target=logger.event, kwargs=dict(msg="正在请求启动{}".format(each.name))), 0)
-        each.start()
-        task.AddTask(Thread(target=logger.event, kwargs=dict(msg="{}已成功发送启动请求".format(each.name))), 0)
+    for t in always_task:
+        logger.event(msg="正在启用守护线程{}".format(t.name))
+        t.daemon = True
+        logger.event(msg="正在请求启动{}".format(t.name))
+        t.start()
+        logger.event(msg="{}已成功发送启动请求".format(t.name))
 
     # 看门狗
+    Times = 0
     while True:
         for each in always_task:
             if not each.is_alive():
                 tasks = (Thread(target=task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"))
-                task.AddTask(Thread(target=logger.warn, kwargs=dict(msg="{}意外退出，正在尝试重新启动".format(each.name))))
+                logger.warn(msg="{}意外退出，正在尝试重新启动".format(each.name))
                 Index = always_task.index(each)
                 always_task[Index] = tasks[Index]
                 always_task[Index].start()
+                Times += 1
         sleep(5)
+        if Times >= 10:
+            logger.event(msg="{}线程重启次数过多".format(t.name))
+            quit()

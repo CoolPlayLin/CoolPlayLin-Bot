@@ -17,7 +17,6 @@ class TaskManager:
             self._task[str(i)]= [[], []]
         self.task_limit = int(task_limit)
         self.status = True
-    
     def run(self) -> bool:
         try:
             while self.status:
@@ -42,8 +41,7 @@ class TaskManager:
             self._task[str(id)][0].append(Task)
             return True
         else:
-            return False
-    
+            return False    
     def __delattr__(self, name:str) -> None:
         error = TypeError("不允许删除任何内部数据, 包括 {}".format(name))
         raise error

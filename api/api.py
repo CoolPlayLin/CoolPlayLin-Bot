@@ -4,7 +4,7 @@ Go-cqhttp的API库
 
 import requests
 from revChatGPT.V3 import Chatbot
-import openai, pathlib
+import openai, pathlib, random
 
 __all__ = ('APIs', "Amap")
 
@@ -268,5 +268,6 @@ class OtherAPI:
         Response = requests.get("https://api.github.com/users/{}/repos".format(user), verify=self.verify)
         return Response
     def random_image(self) -> requests.Response:
-        Response = requests.get("https://api.ixiaowai.cn/gqapi/gqapi.php", verify=self.verify)
+        url = ("https://api.ixiaowai.cn/api/api.php", "https://api.ixiaowai.cn/gqapi/gqapi.php", "https://api.ixiaowai.cn/mcapi/mcapi.php")
+        Response = requests.get(url[random.randint(0, len(url)-1)], verify=self.verify)
         return Response
