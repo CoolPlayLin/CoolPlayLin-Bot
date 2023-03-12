@@ -1,0 +1,18 @@
+name: 'Close stale issues and PRs'
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v7
+        with:
+          stale-issue-message: '此问题已过时，因为它已打开 30 天，没有任何活动。删除过时的标签或评论，否则将在 5 天内关闭。'
+          days-before-stale: 30
+          days-before-close: 5
