@@ -5,7 +5,6 @@ CoolPlayLin-Bot的API基础与功能实现
 """
 
 # 导入依赖API
-
 if __name__ != "__main__":
     from flask import Flask, render_template, request
     from threading import Thread
@@ -23,7 +22,7 @@ DB_PATH = pathlib.Path(__file__).parent.parent / "database" / "db.dat"
 Dates = util.jsonauto(None, "READ", PATH)
 API = util.jsonauto(None, "READ", API_PATH)
 DB = util.jsonauto(None, "READ", DB_PATH)
-task = util.TaskManager(0)
+task = util.TaskManager(0, 3)
 logger = util.Logger(LOG_PATH)
 
 # 创建缓存文件夹
@@ -158,7 +157,7 @@ def group_msg(group_id:int,
                         else:
                             msg["此用户不在Admin中"] = group_id
                 elif 'Status' in message:
-                    msg["状态如下:\n{}个任务正在排队\n{}个任务正在运行".format(len(task.Perform_QueuingTask), len(task.Perform_RunningTask))] = group_id
+                    msg["以下是全部任务视图:\n{}".format(task._task)] = group_id
                 elif util.clean_up(message, [" "]) in ['获取一言', '一言', '文案']:
                     msg[(others.copy().json()['hitokoto'])] = group_id
                 elif "城市编码" in message:
@@ -460,17 +459,17 @@ app = Flask(__name__)
 def accept():
     if request.json["post_type"] == "message":
         if request.json['message_type'] == 'group':
-            task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))))
-            task.AddTask(Thread(target=group_msg, args=(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)))
+            task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))), 1)
+            task.AddTask(Thread(target=group_msg, args=(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)), 1)
         elif request.json['message_type'] == 'private':
             print(request.json['raw_message'])
-            task.AddTask(Thread(target=private_msg, args=(request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)))
+            task.AddTask(Thread(target=private_msg, args=(request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)), 2)
     elif request.json["post_type"] == "meta_event":
         if request.json["meta_event_type"] == "heartbeat":
-            task.AddTask(Thread(target=logger.event, kwargs=dict(msg="接收到心跳包，机器人在线")))
+            task.AddTask(Thread(target=logger.event, kwargs=dict(msg="接收到心跳包，机器人在线")), 0)
     
     # 更新数据
-    task.AddTask(Thread(target=retention, args=(server, Dates, PATH)))
+    task.AddTask(Thread(target=retention, args=(server, Dates, PATH)), 0)
     return 'ok'
 
 @app.route("/", methods=['GET', "POST"]) # Web页面路由

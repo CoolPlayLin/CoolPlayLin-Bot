@@ -16,9 +16,9 @@ always_task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates
 if __name__ == '__main__':
     # 启动所有任务
     for each in always_task:
-        task.AddTask(Thread(target=logger.event, kwargs=dict(msg="正在请求启动{}".format(each.name))))
+        task.AddTask(Thread(target=logger.event, kwargs=dict(msg="正在请求启动{}".format(each.name))), 0)
         each.start()
-        task.AddTask(Thread(target=logger.event, kwargs=dict(msg="{}已成功发送启动请求".format(each.name))))
+        task.AddTask(Thread(target=logger.event, kwargs=dict(msg="{}已成功发送启动请求".format(each.name))), 0)
 
     # 看门狗
     while True:

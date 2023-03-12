@@ -10,37 +10,36 @@ from .typing import TaskManagerExit, BotError
 __all__ = ("TaskManager", "Logger")
 
 class TaskManager:
-    __slots__ = ("Perform_QueuingTask", "Perform_RunningTask", "status", "TaskLimit")
-    def __init__(self, TaskLimit:int) -> None:
-        self.Perform_QueuingTask:list[Thread] = []
-        self.Perform_RunningTask:list[Thread] = []
-        self.TaskLimit = int(TaskLimit)
+    __slots__ = ("_task", "status", "task_limit")
+    def __init__(self, task_limit:int=0, number:int=1) -> None:
+        self._task:dict[str, list[list[Thread], list[Thread]]] = {}
+        for i in range(number):
+            self._task[str(i)]= [[], []]
+        self.task_limit = int(task_limit)
         self.status = True
     
     def run(self) -> bool:
-        while self.status:
-            try:
-                if len(self.Perform_QueuingTask)+len(self.Perform_RunningTask) > 0:
-                    for each in self.Perform_QueuingTask:
-                        self.Perform_RunningTask = [t for t in self.Perform_RunningTask if t.is_alive()]
-                        if not isinstance(each, Thread):
-                            self.Perform_QueuingTask.remove(each)
+        try:
+            while self.status:
+                for id in self._task:
+                    self._task[id][1] = [t for t in self._task[id][1] if t.is_alive()]
+                    for t in self._task[id][0]:
+                        if not isinstance(t, Thread):
+                            self._task[id][0].remove(t)
                             continue
-                        elif self.TaskLimit:
-                            if len(self.Perform_RunningTask) >= self.TaskLimit:
+                        elif self.task_limit:
+                            if len(self._task[id][1]) >= self.task_limit:
                                 continue
-                        self.Perform_RunningTask.append(each)
-                        self.Perform_QueuingTask.remove(each)
-                        self.Perform_RunningTask[-1].start()
-            except BaseException as e:
-                break
-        if self.status:
-            error = TaskManagerExit("任务管理器异常退出")
+                        self._task[id][1].append(t)
+                        t.start()
+                        self._task[id][0].remove(t)
+        except BaseException as e:
+            error = TaskManagerExit("任务管理器异常退出, 原因：{}".format(e))
             raise error
         return True
-    def AddTask(self, Task:Thread) -> bool:
-        if isinstance(Task, Thread):
-            self.Perform_QueuingTask.append(Task)
+    def AddTask(self, Task:Thread, id:int) -> bool:
+        if isinstance(Task, Thread) and str(id) in self._task:
+            self._task[str(id)][0].append(Task)
             return True
         else:
             return False
