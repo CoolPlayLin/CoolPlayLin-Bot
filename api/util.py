@@ -44,8 +44,8 @@ class TaskManager:
         else:
             return False
     
-    def __delattr__(self, __name: str) -> None:
-        error = TypeError("不允许删除任何内部数据")
+    def __delattr__(self, name:str) -> None:
+        error = TypeError("不允许删除任何内部数据, 包括 {}".format(name))
         raise error
     def stop(self):
         self.status = False

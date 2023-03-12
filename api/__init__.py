@@ -411,6 +411,8 @@ def private_msg(user_id:int,
                     res = others.random_image()
                     f.write(res.content)
                 msg["[CQ:image,file=file://{},type=show,id=40004]".format(_img_path.as_posix().replace("/", "//"))] = user_id
+            elif 'Status' in message:
+                    msg["以下是全部任务视图:\n{}".format(task._task)] = user_id
             else:
                 # 彩蛋
                 if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
