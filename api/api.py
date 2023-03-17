@@ -1,10 +1,10 @@
 """
 Go-cqhttp的API库
 """
-
-import requests
 from revChatGPT.V3 import Chatbot
-import openai, pathlib, random
+import openai, pathlib, random, requests, warnings
+
+warnings.filterwarnings('ignore')
 
 __all__ = ('APIs', "Amap")
 

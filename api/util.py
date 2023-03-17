@@ -4,23 +4,25 @@ CoolPlayLin-Bot工具类
 
 from pathlib import Path
 from threading import Thread, Lock
-import json, time, requests, pickle
+import json, time, requests, pickle, random
 from .typing import TaskManagerExit, BotError
 
 __all__ = ("TaskManager", "Logger")
 
 class TaskManager:
-    __slots__ = ("_task", "status", "task_limit")
+    __slots__ = ("_task", "status", "task_limit", "died_task")
     def __init__(self, task_limit:int=0, number:int=1) -> None:
         self._task:dict[str, list[list[Thread], list[Thread]]] = {}
         for i in range(number):
             self._task[str(i)]= [[], []]
         self.task_limit = int(task_limit)
+        self.died_task:list[Thread] = []
         self.status = True
     def run(self) -> bool:
         try:
             while self.status:
                 for id in self._task:
+                    self.died_task.extend([t for t in self._task[id][1] if not t.is_alive()])
                     self._task[id][1] = [t for t in self._task[id][1] if t.is_alive()]
                     for t in self._task[id][0]:
                         if not isinstance(t, Thread):
@@ -162,3 +164,35 @@ def clean_up(chore:str ,clean:list) -> str:
 
 def cut_str(chore:str, part:int) -> list:
     return [chore[i:i+part] for i in range(0,len(chore),part)]
+
+class Cache:
+    def __init__(self, PATH:Path) -> None:
+        self.PATH = PATH
+
+    def write_res(self, objects:requests.Response, prefix:str) -> Path:
+        _path = self.PATH / "{}{}.jpg".format(prefix ,random.randint(1, 100000000))
+        while _path.exists():
+            _path = self.PATH / "{}{}.jpg".format(prefix ,random.randint(1, 100000000))
+        with open(_path, "wb") as f:
+            f.write(objects.content)
+        return _path
+    def write_url(self, url:str, prefix:str, verify:bool=False) -> Path:
+        _path = self.PATH / "{}{}.jpg".format(prefix ,random.randint(1, 100000000))
+        while _path.exists():
+            _path = self.PATH / "{}{}.jpg".format(prefix ,random.randint(1, 100000000))
+        res = requests.get(url, verify=verify)
+        with open(_path, "wb") as f:
+            f.write(res.content)
+        return _path
+    def save_text(self, text:str, suffix:str, prefix:str="") -> Path:
+        _path = self.PATH / "{}{}.{}".format(prefix ,random.randint(1, 100000000), suffix)
+        while _path.exists():
+            _path = self.PATH / "{}{}.{}".format(prefix ,random.randint(1, 100000000), suffix)
+        with open(_path, "wt+", encoding="utf-8") as f:
+            f.write(text)
+        return _path
+    def get_file_name(self, suffix:str, prefix:str="") -> Path:
+        _path = self.PATH / "{}{}.{}".format(prefix ,random.randint(1, 100000000), suffix)
+        while _path.exists():
+            _path = self.PATH / "{}{}.{}".format(prefix ,random.randint(1, 100000000), suffix)
+        return _path

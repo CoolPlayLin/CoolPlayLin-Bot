@@ -55,7 +55,7 @@ jobs:
       run: |
         python -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics >> Report/Report1.txt
         python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics >> Report/Report2.txt
-    - name: self-CI
+    - name: CI while Running
       run: python test.py
     - name: Upload Report
       if: always()

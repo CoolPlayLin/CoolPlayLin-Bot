@@ -19,6 +19,7 @@ PATH = pathlib.Path(__file__).parents[1] / "database" / "config.json"
 API_PATH = pathlib.Path(__file__).parents[1] / "database" / "API.json"
 LOG_PATH = pathlib.Path(__file__).parents[1] / "database" / "running.log"
 DB_PATH = pathlib.Path(__file__).parents[1] / "database" / "db.dat"
+CACHE_PATH = pathlib.Path(__file__).parents[1] / "cache"
 Dates = util.jsonauto(None, "READ", PATH)
 API = util.jsonauto(None, "READ", API_PATH)
 DB = util.jsonauto(None, "READ", DB_PATH)
@@ -26,9 +27,9 @@ task = util.TaskManager(0, 3)
 logger = util.Logger(LOG_PATH)
 
 # 创建缓存文件夹
-CACHE_PATH = (pathlib.Path(__file__).parents[1] / "cache")
-if not CACHE_PATH.exists():
+if not (CACHE_PATH.exists() and CACHE_PATH.is_dir()):
     os.mkdir(CACHE_PATH)
+cache = util.Cache(CACHE_PATH)
 
 # 实例化所需API
 server = api.APIs(Dates["Server"]['PostIP'], AccessKey=Dates["Server"]["AccessKey"])
@@ -299,12 +300,7 @@ def group_msg(group_id:int,
                         _msg = util.clean_up(message, [" ", "图片生成"])
                         if len(_msg) > 0:
                             _url = others.image_generation(_msg)['data'][0]['url']
-                            _img_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
-                            while _img_path.exists():
-                                _img_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
-                            with open(_img_path, "wb") as f:
-                                res = requests.get(_url)
-                                f.write(res.content)
+                            _img_path = cache.write_url(_url, "image")
                             server.upload_group_file(group_id , _img_path, _img_path.stem+_img_path.suffix)
                             msg["生成成功完成"] = group_id
                         else:
@@ -312,13 +308,21 @@ def group_msg(group_id:int,
                     else:
                         msg["密钥为空，无法请求"] = group_id
                 elif "随机图片" in message:
-                    _img_path = CACHE_PATH / "random{}.jpg".format(random.randint(1, 100000000))
-                    while _img_path.exists():
-                        _img_path = CACHE_PATH / "random{}.jpg".format(random.randint(1, 100000000))
-                    with open(_img_path, "wb+") as f:
-                        res = others.random_image()
-                        f.write(res.content)
+                    res = others.random_image()
+                    _img_path = cache.write_res(res, "image")
                     server.upload_group_file(group_id, _img_path, _img_path.stem+_img_path.suffix)
+                elif "运行代码" in message:
+                    from os import system
+                    code = util.clean_up(message, ["运行代码"])
+                    _code_path = cache.save_text(code, "py")
+                    res = cache.get_file_name("txt")
+                    res_code = system("python {}>{}".format(_code_path, res))
+                    if res_code == 1:
+                        msg["代码运行失败"] = group_id
+                    else:
+                        with open(res, "rt", encoding="utf-8") as f:
+                            res = [each.replace("\n", "") for each in f.readlines()]
+                        msg["控制台输出:{}".format(res)] = group_id
                 else:
                     # 彩蛋
                     if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
@@ -367,50 +371,18 @@ def private_msg(user_id:int,
         else:
             if "图片生成" in message:
                 if others.chatgpt_token:
-                    _msg = util.clean_up(message, [" ", "图片生成"])
+                    _msg = util.clean_up(message, ["图片生成"])
                     if len(_msg) > 0:
                         _url = others.image_generation(_msg)['data'][0]['url']
-                        _img_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
-                        while _img_path.exists():
-                            _img_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
-                        with open(_img_path, "wb") as f:
-                            res = requests.get(_url)
-                            f.write(res.content)
+                        _img_path = cache.write_url(_url, "image")
                         msg["[CQ:image,file=file://{},type=show,id=40004]".format(_img_path.as_posix().replace("/", "//"))] = user_id
                     else:
                         msg["输入的内容为空"] = user_id
                 else:
                     msg["密钥为空，无法请求"] = user_id
-            # elif "图片修改" in message:
-            #     if others.chatgpt_token:
-            #         _msg = util.clean_up(message, [" ", "图片修改"])
-            #         if len(_msg) > 0:
-            #             _old_url = _msg[_msg.find("url=")+4:_msg.find(";")]
-            #             _old_path = CACHE_PATH / "user{}.png".format(random.randint(1, 100000000))
-            #             while _old_path.exists():
-            #                 _old_path = CACHE_PATH / "user{}.png".format(random.randint(1, 100000000))
-            #             with open(_old_path, "wb") as f:
-            #                 res = requests.get(_old_url)
-            #                 f.write(res.content)
-            #             _new_url = others.image_variation(_old_path)['data'][0]['url']
-            #             _new_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
-            #             while _new_path.exists():
-            #                 _new_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
-            #             with open(_new_path, "wb") as f:
-            #                 res = requests.get(_new_url)
-            #                 f.write(res.content)
-            #             msg["[CQ:image,file=file://{},type=show,id=40004]".format(_new_path.as_posix().replace("/", "//"))] = user_id
-            #         else:
-            #             msg["输入的内容为空"] = user_id
-            #     else:
-            #         msg["密钥为空，无法请求"] = user_id
             elif "随机图片" in message:
-                _img_path = CACHE_PATH / "random{}.jpg".format(random.randint(1, 100000000))
-                while _img_path.exists():
-                    _img_path = CACHE_PATH / "random{}.jpg".format(random.randint(1, 100000000))
-                with open(_img_path, "wb+") as f:
-                    res = others.random_image()
-                    f.write(res.content)
+                res = others.random_image()
+                _img_path = cache.write_res(res, "image")
                 msg["[CQ:image,file=file://{},type=show,id=40004]".format(_img_path.as_posix().replace("/", "//"))] = user_id
             elif 'Status' in message:
                     msg["以下是全部任务视图:\n{}".format(task._task)] = user_id
