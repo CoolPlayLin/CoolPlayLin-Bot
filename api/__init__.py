@@ -15,10 +15,10 @@ else:
     quit(0)
 
 # 加载必要数据
-PATH = pathlib.Path(__file__).parent.parent / "database" / "config.json"
-API_PATH = pathlib.Path(__file__).parent.parent / "database" / "API.json"
-LOG_PATH = pathlib.Path(__file__).parent.parent / "database" / "running.log"
-DB_PATH = pathlib.Path(__file__).parent.parent / "database" / "db.dat"
+PATH = pathlib.Path(__file__).parents[1] / "database" / "config.json"
+API_PATH = pathlib.Path(__file__).parents[1] / "database" / "API.json"
+LOG_PATH = pathlib.Path(__file__).parents[1] / "database" / "running.log"
+DB_PATH = pathlib.Path(__file__).parents[1] / "database" / "db.dat"
 Dates = util.jsonauto(None, "READ", PATH)
 API = util.jsonauto(None, "READ", API_PATH)
 DB = util.jsonauto(None, "READ", DB_PATH)
@@ -26,8 +26,9 @@ task = util.TaskManager(0, 3)
 logger = util.Logger(LOG_PATH)
 
 # 创建缓存文件夹
-if not (pathlib.Path(__file__).parent / "cache").exists():
-    os.mkdir(pathlib.Path(__file__).parent / "cache")
+CACHE_PATH = (pathlib.Path(__file__).parents[1] / "cache")
+if not CACHE_PATH.exists():
+    os.mkdir(CACHE_PATH)
 
 # 实例化所需API
 server = api.APIs(Dates["Server"]['PostIP'], AccessKey=Dates["Server"]["AccessKey"])
@@ -298,9 +299,9 @@ def group_msg(group_id:int,
                         _msg = util.clean_up(message, [" ", "图片生成"])
                         if len(_msg) > 0:
                             _url = others.image_generation(_msg)['data'][0]['url']
-                            _img_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+                            _img_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
                             while _img_path.exists():
-                                _img_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+                                _img_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
                             with open(_img_path, "wb") as f:
                                 res = requests.get(_url)
                                 f.write(res.content)
@@ -311,9 +312,9 @@ def group_msg(group_id:int,
                     else:
                         msg["密钥为空，无法请求"] = group_id
                 elif "随机图片" in message:
-                    _img_path = pathlib.Path(__file__).parent / "cache" / "random{}.jpg".format(random.randint(1, 100000000))
+                    _img_path = CACHE_PATH / "random{}.jpg".format(random.randint(1, 100000000))
                     while _img_path.exists():
-                        _img_path = pathlib.Path(__file__).parent / "cache" / "random{}.jpg".format(random.randint(1, 100000000))
+                        _img_path = CACHE_PATH / "random{}.jpg".format(random.randint(1, 100000000))
                     with open(_img_path, "wb+") as f:
                         res = others.random_image()
                         f.write(res.content)
@@ -369,9 +370,9 @@ def private_msg(user_id:int,
                     _msg = util.clean_up(message, [" ", "图片生成"])
                     if len(_msg) > 0:
                         _url = others.image_generation(_msg)['data'][0]['url']
-                        _img_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+                        _img_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
                         while _img_path.exists():
-                            _img_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+                            _img_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
                         with open(_img_path, "wb") as f:
                             res = requests.get(_url)
                             f.write(res.content)
@@ -385,16 +386,16 @@ def private_msg(user_id:int,
             #         _msg = util.clean_up(message, [" ", "图片修改"])
             #         if len(_msg) > 0:
             #             _old_url = _msg[_msg.find("url=")+4:_msg.find(";")]
-            #             _old_path = pathlib.Path(__file__).parent / "cache" / "user{}.png".format(random.randint(1, 100000000))
+            #             _old_path = CACHE_PATH / "user{}.png".format(random.randint(1, 100000000))
             #             while _old_path.exists():
-            #                 _old_path = pathlib.Path(__file__).parent / "cache" / "user{}.png".format(random.randint(1, 100000000))
+            #                 _old_path = CACHE_PATH / "user{}.png".format(random.randint(1, 100000000))
             #             with open(_old_path, "wb") as f:
             #                 res = requests.get(_old_url)
             #                 f.write(res.content)
             #             _new_url = others.image_variation(_old_path)['data'][0]['url']
-            #             _new_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+            #             _new_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
             #             while _new_path.exists():
-            #                 _new_path = pathlib.Path(__file__).parent / "cache" / "{}.jpg".format(random.randint(1, 100000000))
+            #                 _new_path = CACHE_PATH / "{}.jpg".format(random.randint(1, 100000000))
             #             with open(_new_path, "wb") as f:
             #                 res = requests.get(_new_url)
             #                 f.write(res.content)
@@ -404,9 +405,9 @@ def private_msg(user_id:int,
             #     else:
             #         msg["密钥为空，无法请求"] = user_id
             elif "随机图片" in message:
-                _img_path = pathlib.Path(__file__).parent / "cache" / "random{}.jpg".format(random.randint(1, 100000000))
+                _img_path = CACHE_PATH / "random{}.jpg".format(random.randint(1, 100000000))
                 while _img_path.exists():
-                    _img_path = pathlib.Path(__file__).parent / "cache" / "random{}.jpg".format(random.randint(1, 100000000))
+                    _img_path = CACHE_PATH / "random{}.jpg".format(random.randint(1, 100000000))
                 with open(_img_path, "wb+") as f:
                     res = others.random_image()
                     f.write(res.content)
@@ -455,7 +456,12 @@ def retention(server:api.APIs, Dates:dict, PATH:pathlib.Path) -> bool:
     return True
 
 # Flask数据接收
-app = Flask(__name__)
+PATHs = ((pathlib.Path(__file__).parent.parent / "static"), (pathlib.Path(__file__).parent.parent / "templates"))
+for f in PATHs:
+    if not f.exists():
+        error = typing.BotError("{}文件夹不存在".format(f))
+        raise error
+app = Flask(__name__, static_folder=PATHs[0], template_folder=PATHs[1])
 
 @app.route("/commit", methods=['POST']) # POST数据路由
 def accept():

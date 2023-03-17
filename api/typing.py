@@ -16,3 +16,6 @@ class TaskManagerExit(BotError):
 class APIError(BotError):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
+class CIError(Exception):
+    pass
