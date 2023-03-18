@@ -8,7 +8,8 @@ CoolPlayLin-Bot的API基础与功能实现
 if __name__ != "__main__":
     from flask import Flask, render_template, request
     from threading import Thread
-    from . import api, util, typing
+    from . import api, util
+    from . import typing as t
     import pathlib, random, time, os, requests
 else:
     print("本程序需要启动器进行启动，不允许直接运行")
@@ -159,7 +160,7 @@ def group_msg(group_id:int,
                         else:
                             msg["此用户不在Admin中"] = group_id
                 elif 'Status' in message:
-                    msg["以下是全部任务视图:\n{}".format(task._task)] = group_id
+                    msg["以下是全部任务视图:\n{}".format(task.task)] = group_id
                 elif util.clean_up(message, [" "]) in ['获取一言', '一言', '文案']:
                     msg[(others.copy().json()['hitokoto'])] = group_id
                 elif "城市编码" in message:
@@ -385,7 +386,7 @@ def private_msg(user_id:int,
                 _img_path = cache.write_res(res, "image")
                 msg["[CQ:image,file=file://{},type=show,id=40004]".format(_img_path.as_posix().replace("/", "//"))] = user_id
             elif 'Status' in message:
-                    msg["以下是全部任务视图:\n{}".format(task._task)] = user_id
+                    msg["以下是全部任务视图:\n{}".format(task.task)] = user_id
             else:
                 # 彩蛋
                 if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
@@ -431,7 +432,7 @@ def retention(server:api.APIs, Dates:dict, PATH:pathlib.Path) -> bool:
 PATHs = ((pathlib.Path(__file__).parent.parent / "static"), (pathlib.Path(__file__).parent.parent / "templates"))
 for f in PATHs:
     if not f.exists():
-        error = typing.BotError("{}文件夹不存在".format(f))
+        error = t.InitializationError("{}文件夹不存在".format(f))
         raise error
 app = Flask(__name__, static_folder=PATHs[0], template_folder=PATHs[1])
 

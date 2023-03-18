@@ -48,3 +48,8 @@ api
 database
 - `API.json` - 存放一些可自定义的数据
 - `db.json` - 存放运行必须的数据
+
+# 贡献
+鸣谢以下开发者对 `CoolPlayLin-Bot` 作出的贡献
+
+![](https://contrib.rocks/image?repo=CoolPlayLin/CoolPlayLin-Bot&max=1000)

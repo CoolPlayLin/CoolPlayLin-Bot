@@ -5,47 +5,45 @@ CoolPlayLin-Bot工具类
 from pathlib import Path
 from threading import Thread, Lock
 import json, time, requests, pickle, random
-from .typing import TaskManagerExit, BotError
-
-__all__ = ("TaskManager", "Logger")
+from . import typing as ts
 
 class TaskManager:
-    __slots__ = ("_task", "status", "task_limit", "died_task")
+    __slots__ = ("task", "status", "task_limit", "died_task")
     def __init__(self, task_limit:int=0, number:int=1) -> None:
-        self._task:dict[str, list[list[Thread], list[Thread]]] = {}
+        self.task:dict[str, list[list[Thread], list[Thread]]] = {}
         for i in range(number):
-            self._task[str(i)]= [[], []]
+            self.task[str(i)]= [[], []]
         self.task_limit = int(task_limit)
         self.died_task:list[Thread] = []
         self.status = True
     def run(self) -> bool:
         try:
             while self.status:
-                for id in self._task:
-                    self.died_task.extend([t for t in self._task[id][1] if not t.is_alive()])
-                    self._task[id][1] = [t for t in self._task[id][1] if t.is_alive()]
-                    for t in self._task[id][0]:
+                for id in self.task:
+                    self.died_task.extend([t for t in self.task[id][1] if not t.is_alive()])
+                    self.task[id][1] = [t for t in self.task[id][1] if t.is_alive()]
+                    for t in self.task[id][0]:
                         if not isinstance(t, Thread):
-                            self._task[id][0].remove(t)
+                            self.task[id][0].remove(t)
                             continue
                         elif self.task_limit:
-                            if len(self._task[id][1]) >= self.task_limit:
+                            if len(self.task[id][1]) >= self.task_limit:
                                 continue
-                        self._task[id][1].append(t)
+                        self.task[id][1].append(t)
                         t.start()
-                        self._task[id][0].remove(t)
+                        self.task[id][0].remove(t)
         except BaseException as e:
-            error = TaskManagerExit("任务管理器异常退出, 原因：{}".format(e))
+            error = ts.TaskManagerExit("任务管理器异常退出, 原因：{}".format(e))
             raise error
         return True
     def AddTask(self, Task:Thread, id:int) -> bool:
-        if isinstance(Task, Thread) and str(id) in self._task:
-            self._task[str(id)][0].append(Task)
+        if isinstance(Task, Thread) and str(id) in self.task:
+            self.task[str(id)][0].append(Task)
             return True
         else:
             return False    
     def __delattr__(self, name:str) -> None:
-        error = TypeError("不允许删除任何内部数据, 包括 {}".format(name))
+        error = ts.ActionNotAllowed("不允许删除任何内部数据, 包括 {}".format(name))
         raise error
     def stop(self):
         self.status = False
@@ -108,7 +106,7 @@ def jsonauto(Json: dict, Action: str, PATH: Path):
             with open(PATH, "rb") as f:
                 return pickle.loads(f.read())
         else:
-            error = BotError("不支持此文件的读写")
+            error = ts.ActionNotAllowed("不支持此文件的读写")
             raise error
 
 def badwords(Message:str, BadWordList:list) -> bool:

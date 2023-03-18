@@ -48,8 +48,3 @@ docker pull ghcr.io/coolplaylin/coolplaylin-bot:main
 - [mdui](https://github.com/zdhxiong/mdui)
 - [revChatGPT](https://github.com/acheong08/ChatGPT)
 - [OpenAI](https://github.com/openai/openai-python)
-
-## 贡献
-鸣谢以下开发者对 `CoolPlayLin-Bot` 作出的贡献
-
-![](https://contrib.rocks/image?repo=CoolPlayLin/CoolPlayLin-Bot&max=1000)
