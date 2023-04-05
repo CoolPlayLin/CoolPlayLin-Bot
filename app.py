@@ -9,6 +9,8 @@ from time import sleep
 import pathlib, os, yaml, json, random
 print("内核主机初始化成功完成")
 
+INIT = False
+
 # 寻找服务器
 cqhttpPath = pathlib.Path(__file__).parents[0] / "server"
 if cqhttpPath.exists():
@@ -38,6 +40,7 @@ if cqhttpPath_cfg.exists():
             else:
                 yml["account"]["uid"] = int(os.getenv("ACCOUNT"))
                 yml["account"]["password"] = os.getenv("PASSWORD")
+                INIT = True
             with open(cqhttpPath_cfg, "w+", encoding="utf-8") as f:
                 f.write(yaml.dump(yml))
     else:
@@ -65,6 +68,8 @@ if __name__ == '__main__':
     # 看门狗
     Times = 0
     while True:
+        if INIT:
+            sleep(100000000000)
         for each in always_task:
             if not each.is_alive():
                 tasks = (Thread(target=task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"), Thread(target=os.system, kwargs=dict(command=f"cd {cqhttpPath.parents[0]} && {cqhttpPath}"), name="Server"))
