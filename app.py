@@ -58,7 +58,7 @@ always_task.append(Thread(target=os.system, kwargs=dict(command=f"cd {cqhttpPath
 
 if __name__ == '__main__':
     if INIT:
-        sleep(100000000000)
+        sleep(1000)
     # 启动所有任务
     for t in always_task:
         logger.event(msg="正在启用守护线程{}".format(t.name))
