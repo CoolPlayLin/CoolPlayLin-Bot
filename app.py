@@ -57,6 +57,8 @@ always_task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates
 always_task.append(Thread(target=os.system, kwargs=dict(command=f"cd {cqhttpPath.parents[0]} && {cqhttpPath}")))
 
 if __name__ == '__main__':
+    if INIT:
+        sleep(100000000000)
     # 启动所有任务
     for t in always_task:
         logger.event(msg="正在启用守护线程{}".format(t.name))
@@ -68,8 +70,6 @@ if __name__ == '__main__':
     # 看门狗
     Times = 0
     while True:
-        if INIT:
-            sleep(100000000000)
         for each in always_task:
             if not each.is_alive():
                 tasks = (Thread(target=task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"), Thread(target=os.system, kwargs=dict(command=f"cd {cqhttpPath.parents[0]} && {cqhttpPath}"), name="Server"))
