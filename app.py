@@ -6,8 +6,7 @@ print("正在初始化内核组件，请稍等")
 from api import task, app, logger, Dates
 from threading import Thread
 from time import sleep
-import pathlib, os
-import yaml
+import pathlib, os, yaml, json, random
 print("内核主机初始化成功完成")
 
 # 寻找服务器
@@ -69,6 +68,16 @@ if __name__ == '__main__':
         for each in always_task:
             if not each.is_alive():
                 tasks = (Thread(target=task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"), Thread(target=os.system, kwargs=dict(command=f"cd {cqhttpPath.parents[0]} && {cqhttpPath}"), name="Server"))
+                if each == task[-1]:
+                    DevicesPath = pathlib.Path(__file__).parents[0] / "server/device.json"
+                    if DevicesPath.exists():
+                        with open(DevicesPath, "rt", encoding="utf-8") as f:
+                            cfg = json.loads(f.read())
+                        cfg["protocol"] = random.randint(1, 9)
+                        with open(DevicesPath, "w+", encoding="utf-8") as f:
+                            cfg = json.dumps(cfg)
+                    else:
+                        error = Exception("服务端无法正常运行")
                 logger.warn(msg="{}意外退出，正在尝试重新启动".format(each.name))
                 Index = always_task.index(each)
                 always_task[Index] = tasks[Index]

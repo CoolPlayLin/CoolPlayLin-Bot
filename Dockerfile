@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . .
 
 RUN mkdir server \
-    && curl -sSL -o go-cqhttp.tar.gz https://github.com/Mrs4s/go-cqhttp/releases/download/v1.0.0-rc4/go-cqhttp_linux_amd64.tar.gz \
+    && curl -sSL -o go-cqhttp.tar.gz https://github.com/Mrs4s/go-cqhttp/releases/download/v1.0.0/go-cqhttp_linux_amd64.tar.gz \
     && tar -zxvf go-cqhttp.tar.gz \
     && mv go-cqhttp config.yml ./server/ \
     && rm go-cqhttp.tar.gz LICENSE README.md
