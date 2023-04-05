@@ -34,7 +34,7 @@ class TaskManager:
                         self.task[id][0].remove(t)
         except BaseException as e:
             error = ts.TaskManagerExit("任务管理器异常退出, 原因：{}".format(e))
-            raise error
+            raise error from e
         return True
     def AddTask(self, Task:Thread, id:int) -> bool:
         if isinstance(Task, Thread) and str(id) in self.task:

@@ -15,8 +15,9 @@ ENV GO_CQHTTP_CONFIG_PATH=/app/server/config.yml
 # 安装全部依赖
 RUN python -m pip install --upgrade pip
 RUN python -m pip install -r requirements.txt --upgrade
+RUN python -m pip install pyyaml --upgrade
 
 # 暴露端口
 EXPOSE 5120
 
-CMD ["python3", "main.py",  "&", "cd", "server", "&&", "/app/server/go-cqhttp", "-c", "/app/server/config.yml"]
+CMD ["python3", "app.py"]
