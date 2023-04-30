@@ -1,7 +1,23 @@
 {
     "Introduce": "你好，我是由CoolPlayLin开发并维护的开源QQ机器人，采用GPLv3许可证，项目直达 -> https://github.com/CoolPlayLin/CoolPlayLin-Bot\n我目前的功能\n1. 一言：获取一言文案\n2. IP定位：获取指定国内IP地址\n3. 未来天气预报：获取未来3天的天气预报\n4. 实时天气预报：获取当前的天气预报\n5. 城市编码：搜索城市的编码\n6. ChatGPT：请求ChatGPT给予答案\n7. 拼音查询：查询汉字的拼音\n8. 拼音查询!：查询带音调的汉字拼音\n9. 图片生成：基于OpenAI的图片生成器\n10. 搜索Github_user：搜索Github上的用户\n11. 搜索Github_repo：搜索Github上的仓库\n12. 查看个人Github：查看个人Github项目\n13. 随机图片：随机获取图片\n14. 运行代码(处于实验中)：运行Python代码",
-    "Command":"以下是所有管理员命令的列表\n1. Root.set 设置发送者为Root用户\n2. 开灯|关灯 关闭|启动全体禁言\n3. AdminGroup.show|append|del 展示|增加|删除管理的群聊\n4. AdminGroup.append! 将添加此群聊为所管理群聊\n5. Refuse|Accept 拒绝|同意请求\n6. Admin.show|append|del 展示|增加|删除管理员\n7. 禁言大转盘 随机分钟禁言\n8. 冷静 禁言1分钟",   
-    "CommandList": {"Root.set":"设置发送者为Root用户", "AdminGroup.show":"展示管理的群聊", "AdminGroup.append":"增加管理的群聊", "AdminGroup.append!":"将添加此群聊为所管理群聊", "AdminGroup.del":"删除管理的群聊", "Refuse":"拒绝某人的请求", "Accept":"撤销拒绝某人的请求", "Admin.show":"展示管理员", "Admin.append":"增加管理员", "Admin.del":"删除管理员", "禁言大转盘":"随机分钟禁言", "冷静":"禁言1分钟"},
-    "keys": {"amap": null, "chatgpt": null},
+    "Command": "以下是所有管理员命令的列表\n1. Root.set 设置发送者为Root用户\n2. 开灯|关灯 关闭|启动全体禁言\n3. AdminGroup.show|append|del 展示|增加|删除管理的群聊\n4. AdminGroup.append! 将添加此群聊为所管理群聊\n5. Refuse|Accept 拒绝|同意请求\n6. Admin.show|append|del 展示|增加|删除管理员\n7. 禁言大转盘 随机分钟禁言\n8. 冷静 禁言1分钟",
+    "CommandList": {
+        "Root.set": "设置发送者为Root用户",
+        "AdminGroup.show": "展示管理的群聊",
+        "AdminGroup.append": "增加管理的群聊",
+        "AdminGroup.append!": "将添加此群聊为所管理群聊",
+        "AdminGroup.del": "删除管理的群聊",
+        "Refuse": "拒绝某人的请求",
+        "Accept": "撤销拒绝某人的请求",
+        "Admin.show": "展示管理员",
+        "Admin.append": "增加管理员",
+        "Admin.del": "删除管理员",
+        "禁言大转盘": "随机分钟禁言",
+        "冷静": "禁言1分钟"
+    },
+    "keys": {
+        "amap": null,
+        "chatgpt": null
+    },
     "gptproxy": null
 }

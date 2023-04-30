@@ -12,7 +12,10 @@ if __name__ != "__main__":
     from threading import Thread
     from . import api, util
     from . import typing as t
-    import pathlib, random, time, os
+    import pathlib
+    import random
+    import time
+    import os
 else:
     print("本程序需要启动器进行启动，不允许直接运行")
     quit(0)
@@ -35,33 +38,34 @@ if not (CACHE_PATH.exists() and CACHE_PATH.is_dir()):
 cache = util.Cache(CACHE_PATH)
 
 # 实例化所需API
-server = api.APIs(Dates["Server"]['PostIP'], AccessKey=Dates["Server"]["AccessKey"])
+server = api.APIs(Dates["Server"]['PostIP'],
+                  AccessKey=Dates["Server"]["AccessKey"])
 amap = api.Amap(API["keys"]["amap"])
 others = api.OtherAPI(API["keys"]["chatgpt"])
 
 
 # 群聊消息处理
-def group_msg(group_id:int,
-              user_id:int,
-              message:str,
-              message_id:int,
-              Dates:dict,
-              API:dict,
-              DB:dict,
-              safe_sleep:float=0.5) -> bool:
+def group_msg(group_id: int,
+              user_id: int,
+              message: str,
+              message_id: int,
+              Dates: dict,
+              API: dict,
+              DB: dict,
+              safe_sleep: float = 0.5) -> bool:
     try:
         if Dates["@Me"] in message:
             msg = {}
             message = util.clean_up(message, [Dates["@Me"]]).lstrip()
-            admin:bool = (user_id in Dates["Admin"])
-            admingroup:bool = (group_id in Dates["AdminGroup"])
-            admingroup_admin:bool = (admin and admingroup)
+            admin: bool = (user_id in Dates["Admin"])
+            admingroup: bool = (group_id in Dates["AdminGroup"])
+            admingroup_admin: bool = (admin and admingroup)
 
             if user_id in Dates['NotAllowUser']:
                 msg['管理员不允许你使用'] = group_id
             elif util.badwords(message, Dates['BadWords']) and admingroup:
-                    server.delete_msg(message_id)
-                    msg["检测到敏感内容, 已尝试撤回"] = group_id
+                server.delete_msg(message_id)
+                msg["检测到敏感内容, 已尝试撤回"] = group_id
             else:
                 if '冷静' in message and admingroup_admin:
                     User = int(util.clean_up(message, ["冷静", " "]))
@@ -84,14 +88,17 @@ def group_msg(group_id:int,
                 elif util.clean_up(message, [" "]) in ["命令列表", "Command", "CommandList", "Command List", "All Command", "command", "命令"]:
                     msg[API["Command"]] = group_id
                 elif "命令查找" in message:
-                    _ = [each for each in API["CommandList"].keys() if util.clean_up(message, ["命令查找", " "]) in each]
+                    _ = [each for each in API["CommandList"].keys(
+                    ) if util.clean_up(message, ["命令查找", " "]) in each]
                     if len(_) > 0:
                         _msg = "我找到了如下命令："
                         for each in _:
-                            _msg += "\n{}\n{}".format(each, API["CommandList"][each])
+                            _msg += "\n{}\n{}".format(each,
+                                                      API["CommandList"][each])
                         msg[_msg] = group_id
                     else:
-                        msg["我没有找到有关 {} 的命令".format(util.clean_up(message, ["命令查找", " "]))] = group_id
+                        msg["我没有找到有关 {} 的命令".format(util.clean_up(
+                            message, ["命令查找", " "]))] = group_id
                 elif "AdminGroup.show" in message and admin:
                     msg['当前所管理的群\n{}'.format(Dates['AdminGroup'])] = group_id
                 elif "AdminGroup.append!" in message and admin:
@@ -102,17 +109,20 @@ def group_msg(group_id:int,
                         msg["你没有Admin权限"] = group_id
                 elif "AdminGroup.append" in message and admin:
                     if user_id in Dates['Admin']:
-                        Group = int(util.clean_up(message ,["AdminGroup.append"]))
+                        Group = int(util.clean_up(
+                            message, ["AdminGroup.append"]))
                         Dates['AdminGroup'].append(Group)
                         msg['保存成功\n{}'.format(Dates['AdminGroup'])] = group_id
                     else:
                         msg["你没有Admin权限"] = group_id
                 elif "AdminGroup.del" in message and admin:
                     if user_id in Dates['Admin']:
-                        Group = int(util.clean_up(message, ["AdminGroup.del", " "]))
+                        Group = int(util.clean_up(
+                            message, ["AdminGroup.del", " "]))
                         if Group in Dates['AdminGroup']:
                             Dates['AdminGroup'].remove(Group)
-                            msg['保存成功\n{}'.format(Dates['AdminGroup'])] = group_id
+                            msg['保存成功\n{}'.format(
+                                Dates['AdminGroup'])] = group_id
                         else:
                             msg['不包含此项'] = group_id
                     else:
@@ -121,14 +131,16 @@ def group_msg(group_id:int,
                     User = int(util.clean_up(message, ["Refuse", " "]))
                     if User != Dates['Root']:
                         Dates['NotAllowUser'].append(User)
-                        msg['已将此用户添加到拒绝列表\n{}'.format(Dates['NotAllowUser'])] = group_id
+                        msg['已将此用户添加到拒绝列表\n{}'.format(
+                            Dates['NotAllowUser'])] = group_id
                     else:
                         msg['不允许将Root用户添加到拒绝列表'] = group_id
                 elif "Accept" in message and admin:
                     User = int(util.clean_up(message, ["Accept", " "]))
                     if User in Dates['NotAllowUser']:
                         Dates['NotAllowUser'].remove(User)
-                        msg['已将此用户从拒绝列表移除\n{}'.format(Dates['NotAllowUser'])] = group_id
+                        msg['已将此用户从拒绝列表移除\n{}'.format(
+                            Dates['NotAllowUser'])] = group_id
                     else:
                         msg['此用户不在拒绝列表中'] = group_id
                 elif "Refuse.show" in message:
@@ -144,12 +156,14 @@ def group_msg(group_id:int,
                     if user_id != Dates['Root']:
                         msg["你没有Root权限"] = group_id
                     else:
-                        msg["当前管理员列表\n{}".format(str(Dates['Admin']))] = group_id
+                        msg["当前管理员列表\n{}".format(
+                            str(Dates['Admin']))] = group_id
                 elif 'Admin.append' in message:
                     if user_id != Dates['Root']:
                         msg["你没有Root权限"] = group_id
                     else:
-                        Dates['Admin'].append(int(util.clean_up(message, ["Admin.append", " "])))
+                        Dates['Admin'].append(
+                            int(util.clean_up(message, ["Admin.append", " "])))
                         msg["保存成功\n{}".format(str(Dates['Admin']))] = group_id
                 elif 'Admin.del' in message:
                     if user_id != Dates['Root']:
@@ -158,7 +172,8 @@ def group_msg(group_id:int,
                         _ = int(util.clean_up(message, ["Admin.del", " "]))
                         if _ in Dates['Admin']:
                             Dates['Admin'].remove(_)
-                            msg["保存成功\n{}".format(str(Dates['Admin']))] = group_id
+                            msg["保存成功\n{}".format(
+                                str(Dates['Admin']))] = group_id
                         else:
                             msg["此用户不在Admin中"] = group_id
                 elif 'Status' in message:
@@ -180,31 +195,38 @@ def group_msg(group_id:int,
                         msg["输入的内容为空"] = group_id
                 elif "实时天气预报" in message:
                     if amap.key:
-                        city = int(util.clean_up(message, ["实时天气预报", "查询", " "]))
+                        city = int(util.clean_up(
+                            message, ["实时天气预报", "查询", " "]))
                         Res = amap.forecasters(city, "base").json()
                         if int(Res["status"]) == 1:
                             Res = Res["lives"][0]
-                            _ = "{}{} 天气预报如下:\n{}\n天气{} {}风{}级 气温{}℃ 湿度{}%".format(Res["province"], Res["city"], Res["reporttime"], Res["weather"], Res["winddirection"], Res["windpower"], Res["temperature"], Res["humidity"]) if len(Res) > 0 else "未查询到有关 {} 的任何天气情况".format(city)
+                            _ = "{}{} 天气预报如下:\n{}\n天气{} {}风{}级 气温{}℃ 湿度{}%".format(Res["province"], Res["city"], Res["reporttime"], Res["weather"], Res[
+                                                                                   "winddirection"], Res["windpower"], Res["temperature"], Res["humidity"]) if len(Res) > 0 else "未查询到有关 {} 的任何天气情况".format(city)
                             msg[_] = group_id
                         else:
-                            msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = group_id
+                            msg["请求失败, 状态代码为{}, 错误原因为{}".format(
+                                Res['status'], Res['info'])] = group_id
                     else:
                         msg["你没有填入Key, 无法请求"] = group_id
                 elif "未来天气预报" in message:
                     if amap.key:
-                        city = int(util.clean_up(message, ["未来天气预报", "查询", " "]))
+                        city = int(util.clean_up(
+                            message, ["未来天气预报", "查询", " "]))
                         Res = amap.forecasters(city, "all").json()
                         if int(Res["status"]) == 1:
                             Res = Res["forecasts"][0]
                             if len(Res["casts"]) > 0:
-                                _ = "{}{} 未来天气情况如下：".format(Res["province"], Res["city"])
+                                _ = "{}{} 未来天气情况如下：".format(
+                                    Res["province"], Res["city"])
                                 for each in Res["casts"]:
-                                    _ += "\n{}\n白天{} {}风{}级 气温{}℃\n晚上{} {}风{}级 气温{}℃".format(each["date"], each["dayweather"], each["daywind"], each["daypower"], each["daytemp"], each["nightweather"], each["nightwind"], each["nightpower"], each["nighttemp"])
+                                    _ += "\n{}\n白天{} {}风{}级 气温{}℃\n晚上{} {}风{}级 气温{}℃".format(
+                                        each["date"], each["dayweather"], each["daywind"], each["daypower"], each["daytemp"], each["nightweather"], each["nightwind"], each["nightpower"], each["nighttemp"])
                             else:
                                 _ = "未查询到有关 {} 的任何天气情况".format(city)
                             msg[_] = group_id
                         else:
-                            msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = group_id
+                            msg["请求失败, 状态代码为{}, 错误原因为{}".format(
+                                Res['status'], Res['info'])] = group_id
                     else:
                         msg["你没有填入Key, 无法请求"] = group_id
                 elif "IP定位" in message:
@@ -213,26 +235,31 @@ def group_msg(group_id:int,
                         if len(ip) > 0:
                             Res = amap.ip_positioning(ip).json()
                             if int(Res['status']) == 1:
-                                _ = "{} 位于{}{}\n坐标为{}\n该城市的编码为 {}".format(ip, Res["province"], Res["city"], Res["rectangle"], Res["adcode"]) if len(Res["rectangle"]) > 0 else "没有查询到 {} 的信息".format(ip)
+                                _ = "{} 位于{}{}\n坐标为{}\n该城市的编码为 {}".format(ip, Res["province"], Res["city"], Res["rectangle"], Res["adcode"]) if len(
+                                    Res["rectangle"]) > 0 else "没有查询到 {} 的信息".format(ip)
                                 msg[_] = group_id
                             else:
-                                msg["请求失败, 状态代码为{}, 错误原因为{}".format(Res['status'], Res['info'])] = group_id
+                                msg["请求失败, 状态代码为{}, 错误原因为{}".format(
+                                    Res['status'], Res['info'])] = group_id
                         else:
                             msg["输入的内容为空"] = group_id
                     else:
                         msg["你没有填入Key, 无法请求"] = group_id
-                        
+
                 elif "ChatGPT" in message:
                     if others.chatgpt_token:
                         _msg = util.clean_up(message, ["ChatGPT", " "])
                         if len(_msg) > 0:
                             try:
-                                _ = others.chatgpt(_msg, API["gptproxy"]) if API["gptproxy"] else others.chatgpt(_msg)
+                                _ = others.chatgpt(
+                                    _msg, API["gptproxy"]) if API["gptproxy"] else others.chatgpt(_msg)
                                 if len(_) <= 512:
-                                    msg["以下是ChatGPT的回答:\n{}".format(_)] = group_id
+                                    msg["以下是ChatGPT的回答:\n{}".format(
+                                        _)] = group_id
                                 else:
                                     msg["以下是ChatGPT的回答:"] = group_id
-                                    msg.update({each:group_id for each in util.cut_str(_, 512)})
+                                    msg.update(
+                                        {each: group_id for each in util.cut_str(_, 512)})
                             except:
                                 msg["请求失败，可能是由于网络原因"] = group_id
                         else:
@@ -240,46 +267,60 @@ def group_msg(group_id:int,
                     else:
                         msg["你没有填入Key, 无法请求"] = group_id
                 elif "搜索Github_repo" in message:
-                    _data = others.search_github_repo(util.clean_up(message, [" ", ":", "搜索Github_repo"])).json()
+                    _data = others.search_github_repo(util.clean_up(
+                        message, [" ", ":", "搜索Github_repo"])).json()
                     if "message" in _data:
                         msg["请求失败，原因: {}".format(_data["message"])] = group_id
                     else:
-                        _msg = "搜索到{}个结果，只展示前30位".format(_data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
+                        _msg = "搜索到{}个结果，只展示前30位".format(
+                            _data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
                         for each in _data["items"]:
-                            _msg += "\n=====\n仓库名称:{}\n作者:{}\n描述:{}\n项目地址:{}".format(each["name"], each["owner"]["login"], each["description"], each["html_url"])
+                            _msg += "\n=====\n仓库名称:{}\n作者:{}\n描述:{}\n项目地址:{}".format(
+                                each["name"], each["owner"]["login"], each["description"], each["html_url"])
                         if len(_msg) <= 512:
                             msg[_msg] = group_id
                         else:
-                            msg.update({each:group_id for each in util.cut_str(_msg, 512)})
+                            msg.update(
+                                {each: group_id for each in util.cut_str(_msg, 512)})
                 elif "搜索Github_user" in message:
-                    _data = others.search_github_user(util.clean_up(message, [" ", ":", "搜索Github_user"])).json()
+                    _data = others.search_github_user(util.clean_up(
+                        message, [" ", ":", "搜索Github_user"])).json()
                     if "message" in _data:
                         msg["请求失败，原因: {}".format(_data["message"])] = group_id
                     else:
-                        _msg = "搜索到{}个结果，只展示前30位".format(_data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
+                        _msg = "搜索到{}个结果，只展示前30位".format(
+                            _data["total_count"]) if _data["total_count"] > 30 else "搜索到{}个结果".format(_data["total_count"])
                         for each in _data["items"]:
-                            _msg += "\n=====\n用户名:{}\n主页:{}".format(each["login"], each["html_url"])
+                            _msg += "\n=====\n用户名:{}\n主页:{}".format(
+                                each["login"], each["html_url"])
                         if len(_msg) <= 512:
                             msg[_msg] = group_id
                         else:
-                            msg.update({each:group_id for each in util.cut_str(_msg, 512)})
+                            msg.update(
+                                {each: group_id for each in util.cut_str(_msg, 512)})
                 elif "查看个人Github" in message:
-                    _data = others.lookup_github_user(util.clean_up(message, [" ", ":", "查看个人Github"])).json()
+                    _data = others.lookup_github_user(util.clean_up(
+                        message, [" ", ":", "查看个人Github"])).json()
                     if "message" in _data:
                         msg["请求失败，原因: {}".format(_data["message"])] = group_id
                     else:
                         if len(_data) > 0:
-                            _msg = "找到了关于{}的{}个仓库信息".format(util.clean_up(message, [" ", ":", "查看个人Github"]), len(_data))
+                            _msg = "找到了关于{}的{}个仓库信息".format(util.clean_up(
+                                message, [" ", ":", "查看个人Github"]), len(_data))
                             for each in _data:
-                                _msg += "\n=====\n仓库名称:{}\n描述:{}\n项目地址:{}".format(each["name"], each["description"], each["html_url"])
+                                _msg += "\n=====\n仓库名称:{}\n描述:{}\n项目地址:{}".format(
+                                    each["name"], each["description"], each["html_url"])
                             if len(_msg) <= 512:
                                 msg[_msg] = group_id
                             else:
-                                msg.update({each:group_id for each in util.cut_str(_msg, 512)})
+                                msg.update(
+                                    {each: group_id for each in util.cut_str(_msg, 512)})
                         else:
-                            _msg["{}没有创建任何仓库".format(util.clean_up(message, [" ", ":", "查看个人Github"]))]
+                            _msg["{}没有创建任何仓库".format(util.clean_up(
+                                message, [" ", ":", "查看个人Github"]))]
                 elif "拼音查询" in message:
-                    _all = [each[0] for each in DB["PiYin2"]] if "拼音查询!" in message else [each[0] for each in DB["PiYin1"]]
+                    _all = [each[0] for each in DB["PiYin2"]] if "拼音查询!" in message else [
+                        each[0] for each in DB["PiYin1"]]
                     _word = util.clean_up(message, [" ", "拼音查询!", "拼音查询"])
                     if len(_word) == 0:
                         res = "请输入内容"
@@ -295,16 +336,18 @@ def group_msg(group_id:int,
                                         res += " {}".format(each[1])
                                         break
                                 else:
-                                    res += " {}".format(word)  
+                                    res += " {}".format(word)
                                     break
                     msg[res] = group_id
                 elif "图片生成" in message:
                     if others.chatgpt_token:
                         _msg = util.clean_up(message, [" ", "图片生成"])
                         if len(_msg) > 0:
-                            _url = others.image_generation(_msg)['data'][0]['url']
+                            _url = others.image_generation(
+                                _msg)['data'][0]['url']
                             _img_path = cache.write_url(_url, "image")
-                            server.upload_group_file(group_id , _img_path, _img_path.stem+_img_path.suffix)
+                            server.upload_group_file(
+                                group_id, _img_path, _img_path.stem+_img_path.suffix)
                             msg["生成成功完成"] = group_id
                         else:
                             msg["输入的内容为空"] = group_id
@@ -313,7 +356,8 @@ def group_msg(group_id:int,
                 elif "随机图片" in message:
                     res = others.random_image()
                     _img_path = cache.write_res(res, "image")
-                    server.upload_group_file(group_id, _img_path, _img_path.stem+_img_path.suffix)
+                    server.upload_group_file(
+                        group_id, _img_path, _img_path.stem+_img_path.suffix)
                 elif "运行代码" in message:
                     from os import system
                     code = util.clean_up(message, ["运行代码"])
@@ -324,7 +368,8 @@ def group_msg(group_id:int,
                         msg["代码运行失败"] = group_id
                     else:
                         with open(res, "rt", encoding="utf-8") as f:
-                            res = [each.replace("\n", "") for each in f.readlines()]
+                            res = [each.replace("\n", "")
+                                   for each in f.readlines()]
                         msg["控制台输出:{}".format(res)] = group_id
                 else:
                     # 彩蛋
@@ -356,21 +401,23 @@ def group_msg(group_id:int,
         raise
 
 # 私聊消息处理
-def private_msg(user_id:int,
-                message:str,
-                message_id:int,
-                Dates:dict,
-                API:dict,
-                DB:dict,
-                safe_sleep:float=0.5
+
+
+def private_msg(user_id: int,
+                message: str,
+                message_id: int,
+                Dates: dict,
+                API: dict,
+                DB: dict,
+                safe_sleep: float = 0.5
                 ) -> bool:
     try:
         msg = {}
         if user_id in Dates['NotAllowUser']:
-                msg['管理员不允许你使用'] = user_id
+            msg['管理员不允许你使用'] = user_id
         elif util.badwords(message, Dates['BadWords']):
-                server.delete_msg(message_id)
-                msg["检测到敏感词汇，不予处理"] = user_id
+            server.delete_msg(message_id)
+            msg["检测到敏感词汇，不予处理"] = user_id
         else:
             if "图片生成" in message:
                 if others.chatgpt_token:
@@ -378,7 +425,8 @@ def private_msg(user_id:int,
                     if len(_msg) > 0:
                         _url = others.image_generation(_msg)['data'][0]['url']
                         _img_path = cache.write_url(_url, "image")
-                        msg["[CQ:image,file=file://{},type=show,id=40004]".format(_img_path.as_posix().replace("/", "//"))] = user_id
+                        msg["[CQ:image,file=file://{},type=show,id=40004]".format(
+                            _img_path.as_posix().replace("/", "//"))] = user_id
                     else:
                         msg["输入的内容为空"] = user_id
                 else:
@@ -386,9 +434,10 @@ def private_msg(user_id:int,
             elif "随机图片" in message:
                 res = others.random_image()
                 _img_path = cache.write_res(res, "image")
-                msg["[CQ:image,file=file://{},type=show,id=40004]".format(_img_path.as_posix().replace("/", "//"))] = user_id
+                msg["[CQ:image,file=file://{},type=show,id=40004]".format(
+                    _img_path.as_posix().replace("/", "//"))] = user_id
             elif 'Status' in message:
-                    msg["以下是全部任务视图:\n{}".format(task.task)] = user_id
+                msg["以下是全部任务视图:\n{}".format(task.task)] = user_id
             else:
                 # 彩蛋
                 if random.randint(1, 1000000) % random.randint(1, 1000000) == 0:
@@ -419,10 +468,13 @@ def private_msg(user_id:int,
         raise
 
 # 数据保存
-def retention(server:api.APIs, Dates:dict, PATH:pathlib.Path) -> bool:
+
+
+def retention(server: api.APIs, Dates: dict, PATH: pathlib.Path) -> bool:
     if Dates["BotQQ"] is None:
         logger.event("正在将当前登录QQ的数据写入config.json")
-        Dates.update({"BotQQ": server.get_login_info().json()['data']['user_id'], "@Me": "[CQ:at,qq={}]".format(server.get_login_info().json()['data']['user_id'])})
+        Dates.update({"BotQQ": server.get_login_info().json()[
+                     'data']['user_id'], "@Me": "[CQ:at,qq={}]".format(server.get_login_info().json()['data']['user_id'])})
         logger.event("数据写入成功完成")
     if Dates != util.jsonauto(None, "TEXT", PATH):
         logger.event("运行数据发生更改，正在保存到本地")
@@ -430,31 +482,39 @@ def retention(server:api.APIs, Dates:dict, PATH:pathlib.Path) -> bool:
         logger.event("数据写入成功完成")
     return True
 
+
 # Flask数据接收
-PATHs = ((pathlib.Path(__file__).parent.parent / "static"), (pathlib.Path(__file__).parent.parent / "templates"))
+PATHs = ((pathlib.Path(__file__).parent.parent / "static"),
+         (pathlib.Path(__file__).parent.parent / "templates"))
 for f in PATHs:
     if not f.exists():
         error = t.InitializationError("{}文件夹不存在".format(f))
         raise error
 app = Flask(__name__, static_folder=PATHs[0], template_folder=PATHs[1])
 
-@app.route("/commit", methods=['POST']) # POST数据路由
+
+@app.route("/commit", methods=['POST'])  # POST数据路由
 def accept():
     if request.json["post_type"] == "message":
         if request.json['message_type'] == 'group':
-            task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(request.json['group_id'], request.json['user_id'], request.json['raw_message']))), 1)
-            task.AddTask(Thread(target=group_msg, args=(request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)), 1)
+            task.AddTask(Thread(target=logger.event, kwargs=dict(msg="收到{}群{}发送的请求 {}".format(
+                request.json['group_id'], request.json['user_id'], request.json['raw_message']))), 1)
+            task.AddTask(Thread(target=group_msg, args=(
+                request.json['group_id'], request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)), 1)
         elif request.json['message_type'] == 'private':
-            task.AddTask(Thread(target=private_msg, args=(request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)), 2)
+            task.AddTask(Thread(target=private_msg, args=(
+                request.json['user_id'], request.json['raw_message'], request.json['message_id'], Dates, API, DB)), 2)
     elif request.json["post_type"] == "meta_event":
         if request.json["meta_event_type"] == "heartbeat":
-            task.AddTask(Thread(target=logger.event, kwargs=dict(msg="接收到心跳包，机器人在线")), 0)
-    
+            task.AddTask(Thread(target=logger.event,
+                         kwargs=dict(msg="接收到心跳包，机器人在线")), 0)
+
     # 更新数据
     task.AddTask(Thread(target=retention, args=(server, Dates, PATH)), 0)
     return 'ok'
 
-@app.route("/", methods=['GET', "POST"]) # Web页面路由
+
+@app.route("/", methods=['GET', "POST"])  # Web页面路由
 def web():
     Res = dict(request.args)
     if "page" in Res:

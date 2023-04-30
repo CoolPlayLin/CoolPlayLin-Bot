@@ -2,17 +2,22 @@
 CoolPlayLin-Bot Docker 启动器
 """
 
-print("正在初始化内核组件，请稍等")
-from api import task, app, logger, Dates
-from threading import Thread
+import random
+import json
+import yaml
+import os
+import pathlib
 from time import sleep
-import pathlib, os, yaml, json, random
+from threading import Thread
+from api import task, app, logger, Dates
+print("正在初始化内核组件，请稍等")
 print("内核主机初始化成功完成")
 
 # 寻找服务器
 cqhttpPath = pathlib.Path(__file__).parents[0] / "server"
 if cqhttpPath.exists():
-    _ = [each for each in [cqhttpPath / pathlib.Path(e) for e in os.listdir(cqhttpPath)] if each.suffix in [".exe", ""] and each.is_file()]
+    _ = [each for each in [cqhttpPath / pathlib.Path(e) for e in os.listdir(
+        cqhttpPath)] if each.suffix in [".exe", ""] and each.is_file()]
     if len(_) == 1:
         cqhttpPath = _[0]
     else:
@@ -25,7 +30,8 @@ else:
 # 寻找配置文件
 cqhttpPath_cfg = pathlib.Path(__file__).parents[0] / "server"
 if cqhttpPath_cfg.exists():
-    _ = [each for each in [cqhttpPath_cfg / pathlib.Path(e) for e in os.listdir(cqhttpPath_cfg)] if each.suffix in [".yml"] and each.is_file()]
+    _ = [each for each in [cqhttpPath_cfg / pathlib.Path(e) for e in os.listdir(
+        cqhttpPath_cfg)] if each.suffix in [".yml"] and each.is_file()]
     print(_)
     if len(_) == 1:
         cqhttpPath_cfg = _[0]
@@ -49,10 +55,12 @@ else:
     raise error
 
 # 建立常驻线程列表
-always_task:list[Thread] = []
+always_task: list[Thread] = []
 always_task.append(Thread(target=task.run, name="TaskManager"))
-always_task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"))
-always_task.append(Thread(target=os.system, kwargs=dict(command=f"cd {cqhttpPath.parents[0]} && {cqhttpPath}")))
+always_task.append(Thread(target=app.run, kwargs=dict(
+    host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"))
+always_task.append(Thread(target=os.system, kwargs=dict(
+    command=f"cd {cqhttpPath.parents[0]} && {cqhttpPath}")))
 
 if __name__ == '__main__':
     # 启动所有任务
@@ -68,13 +76,16 @@ if __name__ == '__main__':
     while True:
         for each in always_task:
             if not each.is_alive():
-                tasks = (Thread(target=task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"), Thread(target=os.system, kwargs=dict(command=f"cd {cqhttpPath.parents[0]} && {cqhttpPath}"), name="Server"))
+                tasks = (Thread(target=task.run, name="TaskManager"), Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"), Thread(
+                    target=os.system, kwargs=dict(command=f"cd {cqhttpPath.parents[0]} && {cqhttpPath}"), name="Server"))
                 if each == task[-1]:
-                    DevicesPath = pathlib.Path(__file__).parents[0] / "server/device.json"
+                    DevicesPath = pathlib.Path(
+                        __file__).parents[0] / "server/device.json"
                     if DevicesPath.exists():
                         with open(DevicesPath, "rt", encoding="utf-8") as f:
                             cfg = json.loads(f.read())
-                        cfg["protocol"] = cfg["protocol"] + 1 if cfg["protocol"] <= 9 else 1
+                        cfg["protocol"] = cfg["protocol"] + \
+                            1 if cfg["protocol"] <= 9 else 1
                         with open(DevicesPath, "w+", encoding="utf-8") as f:
                             cfg = json.dumps(cfg)
                     else:

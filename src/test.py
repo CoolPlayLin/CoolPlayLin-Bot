@@ -1,16 +1,17 @@
 """
 CoolPlayLin-Bot 运行测试
 """
-print("{}正在初始化程序{}".format("="*5, "="*5))
-from api import task, app, logger, Dates
-from api import typing
-from threading import Thread
 from time import sleep
+from threading import Thread
+from api import typing
+from api import task, app, logger, Dates
+print("{}正在初始化程序{}".format("="*5, "="*5))
 print("{}程序初始化完成{}".format("="*5, "="*5))
 
-always_task:list[Thread] = []
+always_task: list[Thread] = []
 always_task.append(Thread(target=task.run, name="TaskManager"))
-always_task.append(Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"))
+always_task.append(Thread(target=app.run, kwargs=dict(
+    host='0.0.0.0', port=Dates["Server"]['AcceptPort']), name="FlaskServer"))
 
 if __name__ == "__main__":
     print("{}开始测试{}".format("="*5, "="*5))
