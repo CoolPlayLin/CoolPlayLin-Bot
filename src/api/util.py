@@ -74,7 +74,7 @@ def jsonauto(Json: dict, Action: str, PATH: Path):
                 return False
         elif PATH.stem+PATH.suffix == "API.json":
             if not PATH.exists():
-                urls = ("https://cdn.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://fastly.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/API.json", "https://gitee.com/coolplaylin/CoolPlayLin-Bot/raw/main/database/API.json")
+                urls = ("https://cdn.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/src/database/API.json", "https://fastly.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/src/database/API.json", "https://gitee.com/coolplaylin/CoolPlayLin-Bot/raw/main/src/database/API.json")
                 for each in urls:
                     try:
                         with open(PATH, "w+", encoding="utf-8") as f:
@@ -87,7 +87,7 @@ def jsonauto(Json: dict, Action: str, PATH: Path):
             return Res
         elif PATH.stem+PATH.suffix == "db.dat":
             if not PATH.exists():
-                urls = ("https://cdn.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/db.json", "https://fastly.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/database/db.json", "https://gitee.com/coolplaylin/CoolPlayLin-Bot/raw/main/database/db.json")
+                urls = ("https://cdn.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/src/database/db.json", "https://fastly.jsdelivr.net/gh/CoolPlayLin/CoolPlayLin-Bot@main/src/database/db.json", "https://gitee.com/coolplaylin/CoolPlayLin-Bot/raw/main/src/database/db.json")
                 source = Path(__file__).parent.parent / "database" / "db.json"
                 if source.exists():
                     with open(source, "rt", encoding="utf-8") as f:

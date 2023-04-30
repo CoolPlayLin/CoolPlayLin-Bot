@@ -10,7 +10,7 @@ if __name__ != "__main__":
     from threading import Thread
     from . import api, util
     from . import typing as t
-    import pathlib, random, time, os, requests
+    import pathlib, random, time, os
 else:
     print("本程序需要启动器进行启动，不允许直接运行")
     quit(0)
