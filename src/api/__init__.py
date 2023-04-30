@@ -4,6 +4,8 @@ CoolPlayLin-Bot的API基础与功能实现
 核心代码，不支持直接启动
 """
 
+__version__ = '0.1.0-dev'
+
 # 导入依赖API
 if __name__ != "__main__":
     from flask import Flask, render_template, request
