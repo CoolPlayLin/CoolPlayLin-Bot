@@ -55,7 +55,7 @@ jobs:
 
       - name: Build and push Docker image - DockerHub
         if: matrix.REGISTRY == 'docker.io'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
@@ -64,7 +64,7 @@ jobs:
 
       - name: Build and push Docker image - Github
         if: matrix.REGISTRY == 'ghcr.io'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
