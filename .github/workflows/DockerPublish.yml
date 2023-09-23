@@ -42,14 +42,14 @@ jobs:
       - name: Extract Docker metadata - DockerHub
         if: matrix.REGISTRY == 'docker.io'
         id: meta-dockerhub
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.REGISTRY }}/${{ secrets.DOCKER_HUB_USER }}/${{ env.IMAGE_NAME }}
       
       - name: Extract Docker metadata - Github
         if: matrix.REGISTRY == 'ghcr.io'
         id: meta-github
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
 
